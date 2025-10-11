@@ -1,0 +1,17 @@
+Testing
+-------
+Scripts/test
+Scripts/coverage
+
+Nuget Package
+-------------
+export MYVER=
+dotnet pack Fuzzy -c Release
+nuget add Fuzzy/bin/Release/Imagibee.Fuzzy.${MYVER}.nupkg -source ~/nuget
+nuget push Fuzzy/bin/Release/Imagibee.Fuzzy.${MYVER}.nupkg -source https://api.nuget.org/v3/index.json
+nuget delete Imagibee.Fuzzy ${MYVER}  -source ~/nuget
+
+(if apikey isn't saved)
+nuget setapikey ${MYKEY} -source https://api.nuget.org/v3/index.json 
+dotnet nuget push Fuzzy/bin/Release/Imagibee.Fuzzy.${MYVER}.nupkg --api-key ${MYKEY} --source https://api.nuget.org/v3/index.json
+
