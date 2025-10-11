@@ -1,0 +1,4 @@
+export STARTDIR=$PWD
+cd Fuzzy.Tests/
+dotnet test -c Release
+cd $STARTDIR
