@@ -1,5 +1,5 @@
 export STARTDIR=$PWD
-cd Testing/Functional
+cd Fuzzy.Tests
 dotnet coverage collect dotnet test -f xml --framework net7.0
 reportgenerator "-reports:output.xml" "-targetdir:TestResults"
 open TestResults/index.html
