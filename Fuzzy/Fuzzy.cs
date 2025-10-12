@@ -71,6 +71,29 @@ namespace Imagibee
             }
         }
 
+        // Fuzzify a group of related inputs
+        public class Fuzzifier
+        {
+            readonly List<Input> group;
+
+            public Fuzzifier(List<Input> inputs)
+            {
+                group = new();
+                foreach (var input in inputs)
+                {
+                    group.Add(input);
+                }
+            }
+
+            public void Fuzzify(double value)
+            {
+                foreach (var input in group)
+                {
+                    input.Fuzzify(value);
+                }
+            }
+        }
+
         // Construct a fuzzy IF/THEN rule
         //
         // Used during defuzzification to map fuzzy values back to a physical values
