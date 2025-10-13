@@ -4,13 +4,13 @@ using System.Collections.Generic;
 
 namespace Imagibee
 {
-    // A simple and easy fuzzy logic library
+    // A simple fuzzy logic library
     //
     // - Define fuzzy inputs
-    // - Fuzzify the physical inputs into the fuzzy inputs
-    // - Combine the fuzzy inputs into IF/THEN rules
-    // - Defuzzify the rules back to physical results
-    namespace Fuzzy
+    // - Fuzzify physical values into fuzzy values
+    // - Combine fuzzy values using IF/THEN rules
+    // - Defuzzify the rules back to physical values
+    static class Fuzzy
     {
         // Converts physical values (X) to fuzzy values (FX) in the range of 0 to 1
         // where the four values of x determine the shape of the fuzzifier.
@@ -71,12 +71,12 @@ namespace Imagibee
             }
         }
 
-        // Fuzzify a group of related inputs
-        public class Fuzzifier
+        // For fuzzifying a group of related inputs
+        public class InputGroup
         {
             readonly List<Input> group;
 
-            public Fuzzifier(List<Input> inputs)
+            public InputGroup(List<Input> inputs)
             {
                 group = new();
                 foreach (var input in inputs)
@@ -96,7 +96,7 @@ namespace Imagibee
 
         // Construct a fuzzy IF/THEN rule
         //
-        // Used during defuzzification to map fuzzy values back to a physical values
+        // Used during defuzzification to convert fuzzy values back to a physical value
         public class Rule
         {
             // x - the physical value for the rule
@@ -124,107 +124,104 @@ namespace Imagibee
             public double X3;
         }
 
-        public static class Functions
+        // AND of fuzzified values
+        public static double AND(double fx1, double fx2)
         {
-            // AND of fuzzified values
-            public static double AND(double fx1, double fx2)
+            return fx1 < fx2 ? fx1 : fx2;
+        }
+        public static double AND(IEnumerable<double> fxs)
+        {
+            double fxMin = double.MaxValue;
+            foreach (var fx in fxs)
             {
-                return fx1 < fx2 ? fx1 : fx2;
-            }
-            public static double AND(IEnumerable<double> fxs)
-            {
-                double fxMin = double.MaxValue;
-                foreach (var fx in fxs)
+                if (fx < fxMin)
                 {
-                    if (fx < fxMin)
-                    {
-                        fxMin = fx;
-                    }
+                    fxMin = fx;
                 }
-                return fxMin;
             }
+            return fxMin;
+        }
 
-            // OR of fuzzified values
-            public static double OR(double fx1, double fx2)
+        // OR of fuzzified values
+        public static double OR(double fx1, double fx2)
+        {
+            return fx1 > fx2 ? fx1 : fx2;
+        }
+        public static double OR(IEnumerable<double> fxs)
+        {
+            double fxMax = double.MinValue;
+            foreach (var fx in fxs)
             {
-                return fx1 > fx2 ? fx1 : fx2;
-            }
-            public static double OR(IEnumerable<double> fxs)
-            {
-                double fxMax = double.MinValue;
-                foreach (var fx in fxs)
+                if (fx > fxMax)
                 {
-                    if (fx > fxMax)
-                    {
-                        fxMax = fx;
-                    }
+                    fxMax = fx;
                 }
-                return fxMax;
             }
+            return fxMax;
+        }
 
-            // NOT of a fuzzified value
-            public static double NOT(double fx)
+        // NOT of a fuzzified value
+        public static double NOT(double fx)
+        {
+            return 1 - fx;
+        }
+
+        // Defuzzify rules to a physical value by centroid method
+        public static double DefuzzifyByCentroid(IList<Rule> rfxs)
+        {
+            double nx = 0;
+            double dx = 0;
+            foreach (var rfx in rfxs)
             {
-                return 1 - fx;
+                var fx = rfx.RFX();
+                nx += fx * rfx.X;
+                dx += fx;
             }
-
-            // Defuzzify rules to a physical value by centroid method
-            public static double DefuzzifyByCentroid(IList<Rule> rfxs)
+            if (dx == 0 && nx == 0)
             {
-                double nx = 0;
-                double dx = 0;
-                foreach (var rfx in rfxs)
+                // Define numertor == denominator == 0 as zero
+                return 0;
+            }
+            else
+            {
+                return nx / dx;
+            }
+        }
+
+        // Used to simplify input definition.  Given the peaks (X2, X3), infer the valleys (X1, X4).
+        //
+        // The valleys are figured so that the slopes of adjacent peaks cross in the middle
+        // and reach zero at the adjacent peaks.  Peaks must be given in ascending order.
+        //
+        // Trapezoid - peaks are different
+        // Triangle - peaks are the same
+        public static IList<Input> DefineInputsByPeaks(
+            double startValley,
+            IList<PeakDefinition> inDefs,
+            double endValley)
+        {
+            List<Input> result = new();
+            double lastPeak = startValley;
+            for (var i = 0; i < inDefs.Count; i++)
+            {
+                if (i < inDefs.Count - 1)
                 {
-                    var fx = rfx.RFX();
-                    nx += fx * rfx.X;
-                    dx += fx;
-                }
-                if (dx == 0 && nx == 0)
-                {
-                    // Define numertor == denominator == 0 as zero
-                    return 0;
+                    inDefs[i].I.X1 = lastPeak;
+                    inDefs[i].I.X2 = inDefs[i].X2;
+                    inDefs[i].I.X3 = inDefs[i].X3;
+                    inDefs[i].I.X4 = inDefs[i + 1].X2;
+                    lastPeak = inDefs[i].X3;
                 }
                 else
                 {
-                    return nx / dx;
+                    inDefs[i].I.X1 = lastPeak;
+                    inDefs[i].I.X2 = inDefs[i].X2;
+                    inDefs[i].I.X3 = inDefs[i].X3;
+                    inDefs[i].I.X4 = endValley;
                 }
+                result.Add(inDefs[i].I);
             }
-
-            // Simplify input definition.  Given the peaks (X2, X3), infer the valleys (X1, X4).
-            //
-            // The valleys are figured such that the slopes of adjacent peaks cross in the middle
-            // and reach zero at the adjacent peaks.  Peaks must be given in ascending order.
-            //
-            // Trapezoid - peaks are different
-            // Triangle - peaks are the same
-            public static IList<Input> DefineInputsByPeaks(
-                double startValley,
-                IList<PeakDefinition> inDefs,
-                double endValley)
-            {
-                List<Input> result = new();
-                double lastPeak = startValley;
-                for (var i = 0; i < inDefs.Count; i++)
-                {
-                    if (i < inDefs.Count - 1)
-                    {
-                        inDefs[i].I.X1 = lastPeak;
-                        inDefs[i].I.X2 = inDefs[i].X2;
-                        inDefs[i].I.X3 = inDefs[i].X3;
-                        inDefs[i].I.X4 = inDefs[i + 1].X2;
-                        lastPeak = inDefs[i].X3;
-                    }
-                    else
-                    {
-                        inDefs[i].I.X1 = lastPeak;
-                        inDefs[i].I.X2 = inDefs[i].X2;
-                        inDefs[i].I.X3 = inDefs[i].X3;
-                        inDefs[i].I.X4 = endValley;
-                    }
-                    result.Add(inDefs[i].I);
-                }
-                return result;
-            }
+            return result;
         }
     }
 }

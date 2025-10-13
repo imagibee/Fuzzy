@@ -11,7 +11,7 @@ public class Tests
     [Test]
     public void TestBehavedInputConstructor()
     {
-        Input input = new(-3, -2, -1, 0);
+        Fuzzy.Input input = new(-3, -2, -1, 0);
         Assert.AreEqual(-3, input.X1);
         Assert.AreEqual(-2, input.X2);
         Assert.AreEqual(-1, input.X3);
@@ -22,13 +22,13 @@ public class Tests
     public void TestInvalidInputConstructor()
     {
         Assert.Throws<ArgumentException>(
-            () => new Input(-3, -1, -2, 0));
+            () => new Fuzzy.Input(-3, -1, -2, 0));
     }
 
     [Test]
     public void TestDefaultInputConstructor()
     {
-        Input input = new();
+        Fuzzy.Input input = new();
         Assert.AreEqual(double.MinValue, input.X1);
         Assert.AreEqual(0, input.X2);
         Assert.AreEqual(0, input.X3);
@@ -38,7 +38,7 @@ public class Tests
     [Test]
     public void TestInputFuzzification()
     {
-        Input input = new(-2, 0, 0, 2);
+        Fuzzy.Input input = new(-2, 0, 0, 2);
         Assert.AreEqual(0, input.Fuzzify(-3));
         Assert.AreEqual(0, input.Fuzzify(-2));
         Assert.AreEqual(.5, input.Fuzzify(-1));
@@ -51,40 +51,40 @@ public class Tests
     [Test]
     public void TestAND()
     {
-        Assert.AreEqual(.2, Functions.AND(.2, .8), ALLOWEDERROR);
-        Assert.AreEqual(.2, Functions.AND(new double[] { .2, .8 }), ALLOWEDERROR);
+        Assert.AreEqual(.2, Fuzzy.AND(.2, .8), ALLOWEDERROR);
+        Assert.AreEqual(.2, Fuzzy.AND(new double[] { .2, .8 }), ALLOWEDERROR);
     }
 
     [Test]
     public void TestOR()
     {
-        Assert.AreEqual(.8, Functions.OR(.2, .8), ALLOWEDERROR);
-        Assert.AreEqual(.8, Functions.OR(new double[] { .2, .8 }), ALLOWEDERROR);
+        Assert.AreEqual(.8, Fuzzy.OR(.2, .8), ALLOWEDERROR);
+        Assert.AreEqual(.8, Fuzzy.OR(new double[] { .2, .8 }), ALLOWEDERROR);
     }
 
     [Test]
     public void TestNOT()
     {
-        Assert.AreEqual(.2, Functions.NOT(.8), ALLOWEDERROR);
+        Assert.AreEqual(.2, Fuzzy.NOT(.8), ALLOWEDERROR);
     }
 
     [Test]
     public void TestDefuzzifyByCentroid()
     {
-        List<Rule> rules = new()
+        List<Fuzzy.Rule> rules = new()
         {
             new(10, () => .5),
             new(30, () => .5),
         };
-        Assert.AreEqual(20, Functions.DefuzzifyByCentroid(rules));
+        Assert.AreEqual(20, Fuzzy.DefuzzifyByCentroid(rules));
     }
 
     [Test]
     public void DefineInputsByPeaksTest()
     {
-        var results = Functions.DefineInputsByPeaks(
+        var results = Fuzzy.DefineInputsByPeaks(
             -4,
-            new List<PeakDefinition>()
+            new List<Fuzzy.PeakDefinition>()
             {
                 new(new(), -3, -2),
                 new(new(), 0, 1),
@@ -103,47 +103,73 @@ public class Tests
     [Test]
     public void ExampleTest()
     {
-        // Tip based on 3 service stars and 1 food stars
-        Assert.AreEqual(17.5, ComputeTip(3.5));
+        // Tip Results
+        Assert.AreEqual(25, ComputeTip(5, 3), ALLOWEDERROR);
+        Assert.AreEqual(20, ComputeTip(4, 3), ALLOWEDERROR);
+        Assert.AreEqual(17.5, ComputeTip(3.5, 3), ALLOWEDERROR);
+        Assert.AreEqual(15, ComputeTip(3, 3), ALLOWEDERROR);
+        Assert.AreEqual(14.1666666, ComputeTip(3.5, 2), ALLOWEDERROR);
+        Assert.AreEqual(12.5, ComputeTip(3, 2), ALLOWEDERROR);
+        Assert.AreEqual(11.25, ComputeTip(3, 1), ALLOWEDERROR);
+        Assert.AreEqual(10, ComputeTip(2, 1), ALLOWEDERROR);
+        Assert.AreEqual(7.5, ComputeTip(1, 1), ALLOWEDERROR);
     }
 
     [Test]
     public void FuzzifyTest()
     {
-        Input ServiceWasExcellent = new(3, 5, 5, double.MaxValue);
-        Input ServiceWasOk = new(1, 3, 3, 5);
-        Input ServiceWasPoor = new(double.MinValue, 1, 1, 3);
-        Fuzzifier Service = new(new() { ServiceWasPoor, ServiceWasOk, ServiceWasExcellent });
+        Fuzzy.Input ServiceWasExcellent = new(3, 5, 5, double.MaxValue);
+        Fuzzy.Input ServiceWasOk = new(1, 3, 3, 5);
+        Fuzzy.Input ServiceWasPoor = new(double.MinValue, 1, 1, 3);
+        Fuzzy.InputGroup Service = new(
+            new()
+            {
+                ServiceWasPoor,
+                ServiceWasOk,
+                ServiceWasExcellent
+            });
         Service.Fuzzify(3);
         Assert.AreEqual(0, ServiceWasExcellent.FX);
         Assert.AreEqual(1, ServiceWasOk.FX);
         Assert.AreEqual(0, ServiceWasPoor.FX);
     }
 
-    //IF the service was excellent THEN the tip should be generous
-    //IF the service was ok THEN the tip should be average
-    //IF the service was poor THEN the tip should be low
-    public double ComputeTip(double serviceStars)
+    // Compute the tip based on 1-5 star service and food ratings
+    //
+    // IF the service was excellent THEN the tip should be generous
+    // IF the service was ok THEN the tip should be average
+    // IF the service was poor OR the food was terrible THEN the tip should be low
+    public double ComputeTip(double serviceStars, double foodStars)
     {
-        // Define service rating based 1 - 5 stars
-        Input ServiceWasExcellent = new(3, 5, 5, double.MaxValue);
-        Input ServiceWasOk = new(1, 3, 3, 5);
-        Input ServiceWasPoor = new(double.MinValue, 1, 1, 3);
-        Fuzzifier Service = new(new() { ServiceWasPoor, ServiceWasOk, ServiceWasExcellent });
+        // Define service rating based on 1-5 star review
+        Fuzzy.Input ServiceWasExcellent = new(3, 5, 5, double.MaxValue);
+        Fuzzy.Input ServiceWasOk = new(1, 3, 3, 5);
+        Fuzzy.Input ServiceWasPoor = new(double.MinValue, 1, 1, 3);
+        Fuzzy.InputGroup Service = new(
+            new()
+            {
+                ServiceWasPoor,
+                ServiceWasOk,
+                ServiceWasExcellent
+            });
         Service.Fuzzify(serviceStars);
 
+        // Define food rating based on 1-5 star review
+        Fuzzy.Input FoodWasTerrible = new(double.MinValue, 1, 1, 3);
+        FoodWasTerrible.Fuzzify(foodStars);
+
         // Evaluate the fuzzy IF/THEN rules
-        List<Rule> rules = new()
+        List<Fuzzy.Rule> rules = new()
         {
             // Generous tip is 25%
             new(25, () => ServiceWasExcellent.FX),
             // Average tip is 15%
             new(15, () => ServiceWasOk.FX),
             // Low tip is 7.5%
-            new(7.5, () => ServiceWasPoor.FX),
+            new(7.5, () => Fuzzy.OR(ServiceWasPoor.FX, FoodWasTerrible.FX)),
         };
 
         // return the tip
-        return Functions.DefuzzifyByCentroid(rules);
+        return Fuzzy.DefuzzifyByCentroid(rules);
     }
 }
