@@ -9,7 +9,7 @@ namespace Imagibee
     // - Define fuzzy inputs
     // - Fuzzify physical values into fuzzy values
     // - Combine fuzzy values using IF/THEN rules
-    // - Defuzzify the rules back to physical values
+    // - Defuzzify the rules back to a physical value
     static class Fuzzy
     {
         // Converts physical values (X) to fuzzy values (FX) in the range of 0 to 1

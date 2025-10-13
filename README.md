@@ -4,7 +4,7 @@ A lightweight fuzzy logic library
 - Define fuzzy inputs
 - Fuzzify physical values into fuzzy values
 - Combine fuzzy values using IF/THEN rules
-- Defuzzify the rules back to physical values
+- Defuzzify the rules back to a physical value
 
 ## Example - fuzzy tip calculator
 ```csharp
