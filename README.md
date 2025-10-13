@@ -1,5 +1,5 @@
 # Fuzzy
-A simple fuzzy logic library
+A lightweight fuzzy logic library
 
 - Define fuzzy inputs
 - Fuzzify physical values into fuzzy values
