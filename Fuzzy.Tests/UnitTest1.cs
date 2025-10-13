@@ -107,15 +107,16 @@ public class Tests
     public void ExampleTest()
     {
         // Tip Results
-        Assert.AreEqual(25, ComputeTip(5, 3), ALLOWEDERROR);
-        Assert.AreEqual(20, ComputeTip(4, 3), ALLOWEDERROR);
-        Assert.AreEqual(17.5, ComputeTip(3.5, 3), ALLOWEDERROR);
-        Assert.AreEqual(15, ComputeTip(3, 3), ALLOWEDERROR);
-        Assert.AreEqual(14.1666666, ComputeTip(3.5, 2), ALLOWEDERROR);
-        Assert.AreEqual(12.5, ComputeTip(3, 2), ALLOWEDERROR);
-        Assert.AreEqual(11.25, ComputeTip(3, 1), ALLOWEDERROR);
-        Assert.AreEqual(10, ComputeTip(2, 1), ALLOWEDERROR);
-        Assert.AreEqual(7.5, ComputeTip(1, 1), ALLOWEDERROR);
+        TipCalculator tip = new(7.5, 15, 25);
+        Assert.AreEqual(25, tip.Calculate(5, 3), ALLOWEDERROR);
+        Assert.AreEqual(20, tip.Calculate(4, 3), ALLOWEDERROR);
+        Assert.AreEqual(17.5, tip.Calculate(3.5, 3), ALLOWEDERROR);
+        Assert.AreEqual(15, tip.Calculate(3, 3), ALLOWEDERROR);
+        Assert.AreEqual(14.1666666, tip.Calculate(3.5, 2), ALLOWEDERROR);
+        Assert.AreEqual(12.5, tip.Calculate(3, 2), ALLOWEDERROR);
+        Assert.AreEqual(11.25, tip.Calculate(3, 1), ALLOWEDERROR);
+        Assert.AreEqual(10, tip.Calculate(2, 1), ALLOWEDERROR);
+        Assert.AreEqual(7.5, tip.Calculate(1, 1), ALLOWEDERROR);
     }
 
     [Test]
@@ -142,37 +143,55 @@ public class Tests
     // IF the service was excellent THEN the tip should be generous
     // IF the service was ok THEN the tip should be average
     // IF the service was poor OR the food was terrible THEN the tip should be low
-    public double ComputeTip(double serviceStars, double foodStars)
+    public class TipCalculator
     {
-        // Define service rating based on 1-5 star review
-        Fuzzy.Input ServiceWasExcellent = new(3, 5, 5, double.MaxValue);
-        Fuzzy.Input ServiceWasOk = new(1, 3, 3, 5);
-        Fuzzy.Input ServiceWasPoor = new(double.MinValue, 1, 1, 3);
-        Fuzzy.InputGroup Service = new(
-            new()
-            {
-                ServiceWasPoor,
-                ServiceWasOk,
-                ServiceWasExcellent
-            });
-        Service.Fuzzify(serviceStars);
-
-        // Define food rating based on 1-5 star review
-        Fuzzy.Input FoodWasTerrible = new(double.MinValue, 1, 1, 3);
-        FoodWasTerrible.Fuzzify(foodStars);
-
-        // Evaluate the fuzzy IF/THEN rules
-        List<Fuzzy.Rule> rules = new()
+        // Construct a TipCalculator
+        public TipCalculator(
+            double lowTip,
+            double averageTip,
+            double generousTip)
         {
-            // Generous tip is 25%
-            new(25, () => ServiceWasExcellent.FX),
-            // Average tip is 15%
-            new(15, () => ServiceWasOk.FX),
-            // Low tip is 7.5%
-            new(7.5, () => Fuzzy.OR(ServiceWasPoor.FX, FoodWasTerrible.FX)),
-        };
+            // Define how service/food ratings are fuzzified
+            serviceWasExcellent = new(3, 5, 5, double.MaxValue);
+            serviceWasOk = new(1, 3, 3, 5);
+            serviceWasPoor = new(double.MinValue, 1, 1, 3);
+            foodWasTerrible = new(double.MinValue, 1, 1, 3);
+            service = new(
+                new()
+                {
+                    serviceWasPoor,
+                    serviceWasOk,
+                    serviceWasExcellent
+                });
+            // Define physical values for defuzzification
+            this.lowTip = lowTip;
+            this.averageTip = averageTip;
+            this.generousTip = generousTip;
+        }
 
-        // return the tip
-        return Fuzzy.DefuzzifyByCentroid(rules);
+        public double Calculate(double serviceStars, double foodStars)
+        {
+            // Fuzzify inputs
+            service.Fuzzify(serviceStars);
+            foodWasTerrible.Fuzzify(foodStars);
+            // Evaluate the fuzzy IF/THEN rules
+            List<Fuzzy.Rule> rules = new()
+            {
+                new(generousTip, () => serviceWasExcellent.FX),
+                new(averageTip, () => serviceWasOk.FX),
+                new(lowTip, () => Fuzzy.OR(serviceWasPoor.FX, foodWasTerrible.FX)),
+            };
+            // defuzzify to a physical tip value
+            return Fuzzy.DefuzzifyByCentroid(rules);
+        }
+
+        readonly Fuzzy.Input serviceWasExcellent;
+        readonly Fuzzy.Input serviceWasOk;
+        readonly Fuzzy.Input serviceWasPoor;
+        readonly Fuzzy.Input foodWasTerrible;
+        readonly Fuzzy.InputGroup service;
+        readonly double lowTip;
+        readonly double averageTip;
+        readonly double generousTip;
     }
 }
