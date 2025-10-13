@@ -1,2 +1,2 @@
 global using NUnit.Framework;
-global using Imagibee.Fuzzy;
+global using Imagibee;
