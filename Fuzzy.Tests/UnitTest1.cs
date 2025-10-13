@@ -1,3 +1,6 @@
+using NUnit.Framework;
+using Imagibee;
+
 #pragma warning disable NUnit2005
 
 public class Tests
