@@ -6,24 +6,39 @@ A lightweight fuzzy logic library
 - Combine fuzzy values using IF/THEN rules
 - Defuzzify the rules back to a physical value
 
+## API
+Here is an overview of the library.  See the source code comments for additional information.
+
+- static class Imagibee.Fuzzy - contains the library
+- class Imagibee.Fuzzy.Input - for defining fuzzy inputs
+- class Imagibee.Fuzzy.InputGroup - group inputs that are fuzzified from the same value
+- class Imagibee.Fuzzy.Rule - for defining fuzzy IF/THEN rules
+- function Imagibee.Fuzzy.DefuzzifyByCentroid - defuzzify rules to a physical value
+- function Imagibee.Fuzzy.DefineInputsByPeaks - simplifies Input definition
+- class Imagibee.Fuzzy.PeakDefinition - used by DefineInputsByPeaks
+
+
 ## Example - fuzzy tip calculator
+This example demonstrates a fuzzy-logic tip calculator.  The tip calculator computes a tip between 7.5% and 25% based on a 1-5 star service rating and a 1-5 start food rating.
+
+Here are the rules ...
+
+- IF the service was excellent THEN the tip should be generous
+- IF the service was ok THEN the tip should be average
+- IF the service was poor OR the food was terrible THEN the tip should be low
+
 ```csharp
 using Imagibee;
 
-// Compute the tip based on 1-5 star service and food ratings
-//
-// IF the service was excellent THEN the tip should be generous
-// IF the service was ok THEN the tip should be average
-// IF the service was poor OR the food was terrible THEN the tip should be low
-public class TipCalculator
+public class MyTipCalculator
 {
-    // Construct a TipCalculator
-    public TipCalculator(
+    // Construct a MyTipCalculator
+    public MyTipCalculator(
         double lowTip,
         double averageTip,
         double generousTip)
     {
-        // Define how service/food ratings are fuzzified
+        // Define membership functions
         serviceWasExcellent = new(3, 5, 5, double.MaxValue);
         serviceWasOk = new(1, 3, 3, 5);
         serviceWasPoor = new(double.MinValue, 1, 1, 3);
@@ -57,6 +72,7 @@ public class TipCalculator
         return Fuzzy.DefuzzifyByCentroid(rules);
     }
 
+    // private data
     readonly Fuzzy.Input serviceWasExcellent;
     readonly Fuzzy.Input serviceWasOk;
     readonly Fuzzy.Input serviceWasPoor;
@@ -68,7 +84,7 @@ public class TipCalculator
 }
 
 // Test Results
-TipCalculator tip = new(7.5, 15, 25);
+MyTipCalculator tip = new(7.5, 15, 25);
 Assert.AreEqual(25, tip.Calculate(5, 3), ALLOWEDERROR);
 Assert.AreEqual(20, tip.Calculate(4, 3), ALLOWEDERROR);
 Assert.AreEqual(17.5, tip.Calculate(3.5, 3), ALLOWEDERROR);

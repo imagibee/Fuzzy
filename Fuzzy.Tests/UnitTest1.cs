@@ -107,7 +107,7 @@ public class Tests
     public void ExampleTest()
     {
         // Tip Results
-        TipCalculator tip = new(7.5, 15, 25);
+        MyTipCalculator tip = new(7.5, 15, 25);
         Assert.AreEqual(25, tip.Calculate(5, 3), ALLOWEDERROR);
         Assert.AreEqual(20, tip.Calculate(4, 3), ALLOWEDERROR);
         Assert.AreEqual(17.5, tip.Calculate(3.5, 3), ALLOWEDERROR);
@@ -138,15 +138,10 @@ public class Tests
         Assert.AreEqual(0, ServiceWasPoor.FX);
     }
 
-    // Compute the tip based on 1-5 star service and food ratings
-    //
-    // IF the service was excellent THEN the tip should be generous
-    // IF the service was ok THEN the tip should be average
-    // IF the service was poor OR the food was terrible THEN the tip should be low
-    public class TipCalculator
+    public class MyTipCalculator
     {
-        // Construct a TipCalculator
-        public TipCalculator(
+        // Construct a MyTipCalculator
+        public MyTipCalculator(
             double lowTip,
             double averageTip,
             double generousTip)
@@ -185,6 +180,7 @@ public class Tests
             return Fuzzy.DefuzzifyByCentroid(rules);
         }
 
+        // private data
         readonly Fuzzy.Input serviceWasExcellent;
         readonly Fuzzy.Input serviceWasOk;
         readonly Fuzzy.Input serviceWasPoor;
