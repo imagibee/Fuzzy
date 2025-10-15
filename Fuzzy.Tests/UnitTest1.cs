@@ -146,7 +146,7 @@ public class Tests
             double averageTip,
             double generousTip)
         {
-            // Define how service/food ratings are fuzzified
+            // Define membership functions
             serviceWasExcellent = new(3, 5, 5, double.MaxValue);
             serviceWasOk = new(1, 3, 3, 5);
             serviceWasPoor = new(double.MinValue, 1, 1, 3);
@@ -158,10 +158,13 @@ public class Tests
                     serviceWasOk,
                     serviceWasExcellent
                 });
-            // Define physical values for defuzzification
-            this.lowTip = lowTip;
-            this.averageTip = averageTip;
-            this.generousTip = generousTip;
+            // Define the fuzzy IF/THEN rules
+            rules = new()
+            {
+                new(generousTip, () => serviceWasExcellent.FX),
+                new(averageTip, () => serviceWasOk.FX),
+                new(lowTip, () => Fuzzy.OR(serviceWasPoor.FX, foodWasTerrible.FX)),
+            };
         }
 
         public double Calculate(double serviceStars, double foodStars)
@@ -169,13 +172,6 @@ public class Tests
             // Fuzzify inputs
             service.Fuzzify(serviceStars);
             foodWasTerrible.Fuzzify(foodStars);
-            // Evaluate the fuzzy IF/THEN rules
-            List<Fuzzy.Rule> rules = new()
-            {
-                new(generousTip, () => serviceWasExcellent.FX),
-                new(averageTip, () => serviceWasOk.FX),
-                new(lowTip, () => Fuzzy.OR(serviceWasPoor.FX, foodWasTerrible.FX)),
-            };
             // defuzzify to a physical tip value
             return Fuzzy.DefuzzifyByCentroid(rules);
         }
@@ -186,8 +182,6 @@ public class Tests
         readonly Fuzzy.Input serviceWasPoor;
         readonly Fuzzy.Input foodWasTerrible;
         readonly Fuzzy.InputGroup service;
-        readonly double lowTip;
-        readonly double averageTip;
-        readonly double generousTip;
+        readonly List<Fuzzy.Rule> rules;
     }
 }
