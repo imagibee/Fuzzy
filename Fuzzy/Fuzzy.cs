@@ -6,10 +6,11 @@ namespace Imagibee
 {
     // A simple fuzzy logic library
     //
-    // - Define fuzzy inputs
-    // - Fuzzify physical values into fuzzy values
-    // - Combine fuzzy values using IF/THEN rules
-    // - Defuzzify the rules back to a physical value
+    // API
+    // 1. Define fuzzy inputs (see Input and DefineInputsByPeaks)
+    // 2. Define how the inputs form fuzzy rules (see Rule)
+    // 3. Fuzzify the physical input values (see Input and InputGroup)
+    // 4. Defuzzify the rules back to a physical value (see DefuzzifyByCentroid)
     public static class Fuzzy
     {
         // Converts physical values (X) to fuzzy values (FX) in the range of 0 to 1

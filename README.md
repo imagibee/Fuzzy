@@ -1,32 +1,29 @@
 # Fuzzy
-A lightweight fuzzy logic library
+A practical, lightweight fuzzy logic library inspired by Mamdani
 
-- Define fuzzy inputs
-- Fuzzify physical values into fuzzy values
-- Combine fuzzy values using IF/THEN rules
-- Defuzzify the rules back to a physical value
+The primary goals of this project are to to provide an open, reliable, convenient, performant, tested basis of C# classes and functions for the development of fuzzy logic controllers within C# projects.  I have intentionally avoided using text to name variables, or writing parsers to parse rules, etc.  The C# language already provides the features we need if we are willing to live within it's constraints.  So, for this project at least, there is no need to resort to these more complex measures.
 
 ## API
-Here is an overview of the library.  See the source code comments for additional information.
+FWIW, here is an overview of the API.  I recommend reading the source code for details.
 
-- static class Imagibee.Fuzzy - contains the library
-- class Imagibee.Fuzzy.Input - for defining fuzzy inputs
-- class Imagibee.Fuzzy.InputGroup - group inputs that are fuzzified from the same value
-- class Imagibee.Fuzzy.Rule - for defining fuzzy IF/THEN rules
-- function Imagibee.Fuzzy.DefuzzifyByCentroid - defuzzify rules to a physical value
-- function Imagibee.Fuzzy.DefineInputsByPeaks - simplifies Input definition
-- class Imagibee.Fuzzy.PeakDefinition - used by DefineInputsByPeaks
+- <span style="color: orange;">static class</span> <span style="color: violet;">Imagibee.Fuzzy</span> - contains the whole library
+- <span style="color: orange;">class</span> <span style="color: violet;">Imagibee.Fuzzy.Input</span> - for defining trapezoidal, triangular, or box membership functions and fuzzifying physical values
+- <span style="color: orange;">class</span> <span style="color: violet;">Imagibee.Fuzzy.InputGroup</span> - a <i>convenient</i> way to fuzzify a group of inputs that derive their fuzzy values from the same physical value
+- <span style="color: orange;">class</span> <span style="color: violet;">Imagibee.Fuzzy.Rule</span> - for combining fuzzy inputs into IF/THEN rules (by utilizing lambda expressions)
+- <span style="color: orange;">function</span> <span style="color: violet;">Imagibee.Fuzzy.DefuzzifyByCentroid</span> - defuzzify rules to a physical value
+- <span style="color: orange;">function</span> <span style="color: violet;">Imagibee.Fuzzy.DefineInputsByPeaks</span> - An <i>even more convenient</i> way to define inputs that should work for most cases
+- <span style="color: orange;">class</span> <span style="color: violet;">Imagibee.Fuzzy.PeakDefinition</span> - used by DefineInputsByPeaks
 
 
 ## Example - fuzzy tip calculator
-This example demonstrates a fuzzy-logic tip calculator.  The tip calculator computes a tip between 7.5% and 25% based on a 1-5 star service rating and a 1-5 start food rating.
+Here is an example that demonstrates how you might want to use this library.  It shows how you could implement a fuzzy-logic tip calculator.  The kind of thing you would use to calculate a tip when you eat at a restaraunt.  For the sake of this exampe, the physical value of the tip ranges between 7.5% to 25%.  The tip is the ultimate value we want to get from our calculator so we can pay our waiter fairly.  The service rating ranges from 1-5 stars, and it is a physical input value based on how good you thought the service was.  The food rating also ranges from 1-5 stars, and it is another physical input value based on how good you thought the food was.
 
 Here are the rules ...
+- <span style="color: orange;">IF</span> the service was excellent <span style="color: orange;">THEN</span> the tip should be generous
+- <span style="color: orange;">IF</span> the service was ok <span style="color: orange;">THEN</span> the tip should be average
+- <span style="color: orange;">IF</span> the service was poor <span style="color: orange;">OR</span> the food was terrible <span style="color: orange;">THEN</span> the tip should be low
 
-- IF the service was excellent THEN the tip should be generous
-- IF the service was ok THEN the tip should be average
-- IF the service was poor OR the food was terrible THEN the tip should be low
-
+And here is how I would code the rules ...
 ```csharp
 using Imagibee;
 
@@ -76,8 +73,10 @@ public class MyTipCalculator
     readonly Fuzzy.InputGroup service;
     readonly List<Fuzzy.Rule> rules;
 }
+```
 
-// Test Results
+And here are the tests that were used to validate this example ...
+```csharp
 MyTipCalculator tip = new(7.5, 15, 25);
 Assert.AreEqual(25, tip.Calculate(5, 3), ALLOWEDERROR);
 Assert.AreEqual(20, tip.Calculate(4, 3), ALLOWEDERROR);

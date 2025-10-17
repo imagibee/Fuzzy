@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <PackageId>Imagibee.Fuzzy</PackageId>
-    <PackageVersion>1.0.6</PackageVersion>
+    <PackageVersion>1.0.7</PackageVersion>
     <Authors>dynamicbutter</Authors>
     <Description>A lightweight fuzzy logic library</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
