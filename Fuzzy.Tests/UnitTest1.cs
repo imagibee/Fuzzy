@@ -169,10 +169,10 @@ public class Tests
 
         public double Calculate(double serviceStars, double foodStars)
         {
-            // Fuzzify inputs
+            // Convert physical star values to fuzzy values
             service.Fuzzify(serviceStars);
             foodWasTerrible.Fuzzify(foodStars);
-            // defuzzify to a physical tip value
+            // Apply rules to convert fuzzy inputs to a physical tip value
             return Fuzzy.DefuzzifyByCentroid(rules);
         }
 
