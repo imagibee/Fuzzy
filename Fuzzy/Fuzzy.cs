@@ -4,17 +4,15 @@ using System.Collections.Generic;
 
 namespace Imagibee
 {
-    // A simple fuzzy logic library
-    //
-    // API
-    // 1. Define fuzzy inputs (see Input and DefineInputsByPeaks)
-    // 2. Define how the inputs form fuzzy rules (see Rule)
-    // 3. Fuzzify the physical input values (see Input and InputGroup)
-    // 4. Defuzzify the rules back to a physical value (see DefuzzifyByCentroid)
+    // A lightweight fuzzy logic library inspired by Mamdani
     public static class Fuzzy
     {
-        // Converts physical values (X) to fuzzy values (FX) in the range of 0 to 1
-        // where the four values of x determine the shape of the fuzzifier.
+        // The Input class is used for defining trapezoidal, triangular, or box
+        // membership functions and fuzzifying physical values.
+        //
+        // It maps physical values (X) to fuzzy values (FX) in the range of
+        // 0 to 1 where the four values of x determine the shape of the
+        // membership function.
         public class Input
         {
             public double FX { get; internal set; } = double.NaN;
@@ -25,13 +23,25 @@ namespace Imagibee
 
             // Construct a fuzzy input
             //
-            // The fuzzifier shape is defined by the four values of x where
-            // x2 >= x1, x3 >= x2, and x4 >= x3.
+            // The membership function trapezoid is defined by the four values of x
+            // where x2 >= x1, x3 >= x2, and x4 >= x3.
             //
             // Trapezoidal when x2 > x1, x3 > x2, x4 > x3
             // Trianglular when  x2 > x1, x3 == x2, x4 > x3
-            // Rectangular Left when x1 == double.MinValue
-            // Rectangular Right when x4 == double.MaxValue
+            // Infinite left when x1 == double.MinValue
+            // Infinite right when x4 == double.MaxValue
+            //
+            // x1 - the value of x where the left valley of the membership
+            // trapezoid starts ascending from 0
+            //
+            // x2 - the value of x where the left peak of the membership
+            // trapezoid reaches 1
+            //
+            // x3 - the value of x where the right peak of the membership
+            // trapezoid starts descending from 1
+            //
+            // x4 - the value of x where the right valley of the membership
+            // trapezoid reaches 0
             public Input(double x1, double x2, double x3, double x4)
             {
                 if (x2 < x1 || x3 < x2 || x4 < x3)
@@ -45,7 +55,7 @@ namespace Imagibee
             }
             public Input() : this(double.MinValue, 0, 0, double.MaxValue) { }
 
-            // Fuzzify the physical value x to a fuzzy value fx
+            // Map the physical value x to a fuzzy value fx
             public double Fuzzify(double x)
             {
                 if (x <= X1)
@@ -72,7 +82,8 @@ namespace Imagibee
             }
         }
 
-        // For fuzzifying a group of related inputs
+        // InputGroup provides a convenient way to map a group of inputs
+        // to the same physical value
         public class InputGroup
         {
             readonly List<Input> group;
@@ -86,22 +97,26 @@ namespace Imagibee
                 }
             }
 
-            public void Fuzzify(double value)
+            // Map the physical value x to a fuzzy value fx for each input in
+            // the group
+            public void Fuzzify(double x)
             {
                 foreach (var input in group)
                 {
-                    input.Fuzzify(value);
+                    input.Fuzzify(x);
                 }
             }
         }
 
-        // Construct a fuzzy IF/THEN rule
-        //
-        // Used during defuzzification to convert fuzzy values back to a physical value
+        // Rule provides a way to combine fuzzy inputs into IF/THEN rules
         public class Rule
         {
-            // x - the physical value for the rule
-            // rfx - a fuzzy IF/THEN rule formed by creating a closure on 1 or more fuzzified Input
+            // Construct a Rule
+            //
+            // x - the physical value that equates to the rule output
+            //
+            // rfx - a fuzzy IF/THEN rule expressed as an anonymous function
+            // that operates on one or more fuzzy inputs
             public Rule(double x, Func<double> rfx)
             {
                 X = x;
@@ -167,7 +182,8 @@ namespace Imagibee
             return 1 - fx;
         }
 
-        // Defuzzify rules to a physical value by centroid method
+        // DefuzzifyByCentroid defuzzifies rules back to a physical value by
+        // using the centroid method
         public static double DefuzzifyByCentroid(IList<Rule> rfxs)
         {
             double nx = 0;
@@ -189,13 +205,20 @@ namespace Imagibee
             }
         }
 
-        // Used to simplify input definition.  Given the peaks (X2, X3), infer the valleys (X1, X4).
+        // DefineInputsByPeaks is an even more convenient way to define inputs
         //
-        // The valleys are figured so that the slopes of adjacent peaks cross in the middle
-        // and reach zero at the adjacent peaks.  Peaks must be given in ascending order.
+        // Given only the peaks (X2, X3) the valleys (X1, X4) are inferred.
+        // The valleys are figured so that the slopes of adjacent peaks cross
+        // in the middle and reach zero at the adjacent peaks.  Peaks must be
+        // given in ascending order.
         //
-        // Trapezoid - peaks are different
-        // Triangle - peaks are the same
+        // startValley - the X1 value of first input be specified (use
+        // double.MinValue for infinite left)
+        //
+        // inDefs - defines the PeakDefinition for each input
+        //
+        // endValley - the X4 valley of the last input be specified (use
+        // double.MaxValue for infinite right)
         public static IList<Input> DefineInputsByPeaks(
             double startValley,
             IList<PeakDefinition> inDefs,

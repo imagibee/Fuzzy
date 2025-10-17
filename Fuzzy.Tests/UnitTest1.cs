@@ -6,10 +6,6 @@ using Imagibee;
 public class Tests
 {
     const double ALLOWEDERROR = 1e-6;
-    [SetUp]
-    public void Setup()
-    {
-    }
 
     [Test]
     public void TestBehavedInputConstructor()
