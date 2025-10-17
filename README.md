@@ -1,17 +1,19 @@
 # Fuzzy
-A practical, lightweight fuzzy logic library inspired by Mamdani
+A lightweight fuzzy logic library inspired by Mamdani
 
-The primary goals of this project are to to provide an open, reliable, flexible, convenient, performant, tested basis of C# classes and functions that support the development of fuzzy logic controllers within C# projects.  I have intentionally avoided a linguistically pure approach that uses interpreted strings to name variables, define rules, etc.  Instead I have chosen to leverage C#'s built-in features for symbol naming.  In essence, this choice reduces complexity and improves performance at the cost of linguistic purity.
+The primary goals of this project are to to provide a reliable, flexible, convenient, performant, tested basis of C# classes and functions that support the development of fuzzy logic controllers within C# projects.
+
+I have intentionally avoided using interpreted strings to name fuzzy variables, define fuzzy rules, etc.  Instead I have chosen to embrace C#'s built-in features for symbol naming and anonymous functions.  This approach reduces complexity and improves performance at the cost of being less purist which I feel is a good tradeoff for a lightweight library.
 
 ## API
-Here is an overview of the API.  FWIW, I recommend reading the source code for details.
+Here is an overview of the API.  Refer to the [source code](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy/Fuzzy.cs) for details.  There is also an example in the next section, or feel free to look at the [unit tests](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy.Tests/UnitTest1.cs) if that is helpful.
 
 - `static class Imagibee.Fuzzy` - contains the whole library
 - `class Imagibee.Fuzzy.Input` - for defining trapezoidal, triangular, or box membership functions and fuzzifying physical values
-- `class Imagibee.Fuzzy.InputGroup` - a <i>convenient</i> way to fuzzify a group of inputs that derive their fuzzy values from the same physical value
+- `class Imagibee.Fuzzy.InputGroup` - a convenient way to fuzzify a group of inputs that derive their fuzzy values from the same physical value
 - `class Imagibee.Fuzzy.Rule` - for combining fuzzy inputs into IF/THEN rules
 - `function Imagibee.Fuzzy.DefuzzifyByCentroid` - defuzzify rules to a physical value
-- `function Imagibee.Fuzzy.DefineInputsByPeaks` - An <i>even more convenient</i> way to define inputs that should work for most cases
+- `function Imagibee.Fuzzy.DefineInputsByPeaks` - An even more convenient way to define inputs that should work for most cases
 - `class Imagibee.Fuzzy.PeakDefinition` - used by DefineInputsByPeaks
 
 
