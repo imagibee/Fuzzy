@@ -1,7 +1,7 @@
 # Fuzzy
 A lightweight fuzzy logic library inspired by Mamdani
 
-The primary goals of this project are to to provide a reliable, flexible, convenient, performant, tested basis of C# classes and functions that support the development of fuzzy logic controllers within C# projects.
+The primary goal of this project is to to provide a tested library of C# classes and functions that support the development of fuzzy logic controllers within C# projects.
 
 I have intentionally avoided using interpreted strings to name fuzzy variables, define fuzzy rules, etc.  Instead I have chosen to embrace C#'s built-in features for symbol naming and anonymous functions.  This approach reduces complexity and improves performance at the cost of being less purist which I feel is a good tradeoff for a lightweight library.
 
