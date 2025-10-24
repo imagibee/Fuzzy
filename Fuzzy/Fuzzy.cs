@@ -86,17 +86,16 @@ namespace Imagibee
         // to the same physical value
         public class InputGroup
         {
-            readonly List<Input> group;
+            readonly Input[] group;
 
-            public InputGroup(List<Input> inputs)
+#if NET8_0_OR_GREATER
+            public InputGroup(params Input[] inputs)
+#else
+            public InputGroup(Input[] inputs)
+#endif
             {
-                group = new();
-                foreach (var input in inputs)
-                {
-                    group.Add(input);
-                }
+                group = inputs;
             }
-
             // Map the physical value x to a fuzzy value fx for each input in
             // the group
             public void Fuzzify(double x)
@@ -145,7 +144,11 @@ namespace Imagibee
         {
             return fx1 < fx2 ? fx1 : fx2;
         }
-        public static double AND(IEnumerable<double> fxs)
+#if NET8_0_OR_GREATER
+        public static double AND(params double[] fxs)
+#else
+        public static double AND(double[] fxs)
+#endif
         {
             double fxMin = double.MaxValue;
             foreach (var fx in fxs)
@@ -163,7 +166,11 @@ namespace Imagibee
         {
             return fx1 > fx2 ? fx1 : fx2;
         }
-        public static double OR(IEnumerable<double> fxs)
+#if NET8_0_OR_GREATER
+        public static double OR(params double[] fxs)
+#else
+        public static double OR(double[] fxs)
+#endif
         {
             double fxMax = double.MinValue;
             foreach (var fx in fxs)
@@ -175,7 +182,6 @@ namespace Imagibee
             }
             return fxMax;
         }
-
         // NOT of a fuzzified value
         public static double NOT(double fx)
         {
@@ -184,7 +190,11 @@ namespace Imagibee
 
         // DefuzzifyByCentroid defuzzifies rules back to a physical value by
         // using the centroid method
-        public static double DefuzzifyByCentroid(IList<Rule> rfxs)
+#if NET8_0_OR_GREATER
+        public static double DefuzzifyByCentroid(params Rule[] rfxs)
+#else
+        public static double DefuzzifyByCentroid(Rule[] rfxs)
+#endif
         {
             double nx = 0;
             double dx = 0;
@@ -219,16 +229,23 @@ namespace Imagibee
         //
         // endValley - the X4 valley of the last input be specified (use
         // double.MaxValue for infinite right)
-        public static IList<Input> DefineInputsByPeaks(
+#if NET8_0_OR_GREATER
+        public static Input[] DefineInputsByPeaks(
             double startValley,
-            IList<PeakDefinition> inDefs,
-            double endValley)
+            double endValley,
+            params PeakDefinition[] inDefs)
+#else
+        public static Input[] DefineInputsByPeaks(
+            double startValley,
+            double endValley,
+            PeakDefinition[] inDefs)
+#endif
         {
-            List<Input> result = new();
+            var result = new Input[inDefs.Length];
             double lastPeak = startValley;
-            for (var i = 0; i < inDefs.Count; i++)
+            for (var i = 0; i < inDefs.Length; i++)
             {
-                if (i < inDefs.Count - 1)
+                if (i < inDefs.Length - 1)
                 {
                     inDefs[i].I.X1 = lastPeak;
                     inDefs[i].I.X2 = inDefs[i].X2;
@@ -243,7 +260,7 @@ namespace Imagibee
                     inDefs[i].I.X3 = inDefs[i].X3;
                     inDefs[i].I.X4 = endValley;
                 }
-                result.Add(inDefs[i].I);
+                result[i] = inDefs[i].I;
             }
             return result;
         }

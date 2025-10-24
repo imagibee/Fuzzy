@@ -37,20 +37,26 @@ public class MyTipCalculator
         double averageTip,
         double generousTip)
     {
-        // Define membership functions
+        // Define membership function trapezoids based on physical star values
         serviceWasExcellent = new(3, 5, 5, double.MaxValue);
         serviceWasOk = new(1, 3, 3, 5);
         serviceWasPoor = new(double.MinValue, 1, 1, 3);
         foodWasTerrible = new(double.MinValue, 1, 1, 3);
-        service = new(
-            new()
+#if NET8_0_OR_GREATER
+        // If you are using .net8 or later you can use params instead of explicit arrays
+        service = new Fuzzy.InputGroup(
+            serviceWasPoor, serviceWasOk, serviceWasExcellent);
+#else
+        service = new Fuzzy.InputGroup(
+            new Fuzzy.Input[]
             {
                 serviceWasPoor,
                 serviceWasOk,
                 serviceWasExcellent
             });
+#endif
         // Define the fuzzy IF/THEN rules
-        rules = new()
+        rules = new Fuzzy.Rule[]
         {
             new(generousTip, () => serviceWasExcellent.FX),
             new(averageTip, () => serviceWasOk.FX),
@@ -60,10 +66,10 @@ public class MyTipCalculator
 
     public double Calculate(double serviceStars, double foodStars)
     {
-        // Fuzzify inputs
+        // Convert physical star values to fuzzy values
         service.Fuzzify(serviceStars);
         foodWasTerrible.Fuzzify(foodStars);
-        // defuzzify to a physical tip value
+        // Apply rules to convert fuzzy inputs to a physical tip value
         return Fuzzy.DefuzzifyByCentroid(rules);
     }
 
@@ -73,7 +79,7 @@ public class MyTipCalculator
     readonly Fuzzy.Input serviceWasPoor;
     readonly Fuzzy.Input foodWasTerrible;
     readonly Fuzzy.InputGroup service;
-    readonly List<Fuzzy.Rule> rules;
+    readonly Fuzzy.Rule[] rules;
 }
 ```
 
