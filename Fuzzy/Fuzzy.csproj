@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <PackageId>Imagibee.Fuzzy</PackageId>
-    <PackageVersion>1.0.10</PackageVersion>
+    <PackageVersion>2.0.0</PackageVersion>
     <Authors>dynamicbutter</Authors>
     <Description>A lightweight fuzzy logic library inspired by Mamdani</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -11,7 +11,7 @@
     <RepositoryUrl>https://github.com/imagibee/Fuzzy</RepositoryUrl>
     <RespositoryType>git</RespositoryType>
     <PackageTags>fuzzy logic</PackageTags>
-    <TargetFrameworks>netstandard2.1;netcoreapp3.1;net5.0;net6.0;net7.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0</TargetFrameworks>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>

@@ -52,6 +52,9 @@ public class Tests
     {
         Assert.AreEqual(.2, Fuzzy.AND(.2, .8), ALLOWEDERROR);
         Assert.AreEqual(.2, Fuzzy.AND(new double[] { .2, .8 }), ALLOWEDERROR);
+#if NET8_0_OR_GREATER
+        Assert.AreEqual(.2, Fuzzy.AND(.2, .8 ), ALLOWEDERROR);
+#endif
     }
 
     [Test]
@@ -59,6 +62,9 @@ public class Tests
     {
         Assert.AreEqual(.8, Fuzzy.OR(.2, .8), ALLOWEDERROR);
         Assert.AreEqual(.8, Fuzzy.OR(new double[] { .2, .8 }), ALLOWEDERROR);
+#if NET8_0_OR_GREATER
+        Assert.AreEqual(.8, Fuzzy.OR(.2, .8), ALLOWEDERROR);
+#endif
     }
 
     [Test]
@@ -70,7 +76,7 @@ public class Tests
     [Test]
     public void TestDefuzzifyByCentroid()
     {
-        List<Fuzzy.Rule> rules = new()
+        var rules = new Fuzzy.Rule[]
         {
             new(10, () => .5),
             new(30, () => .5),
@@ -81,14 +87,21 @@ public class Tests
     [Test]
     public void DefineInputsByPeaksTest()
     {
+#if NET8_0_OR_GREATER
+        var results = Fuzzy.DefineInputsByPeaks(
+            -4, 7,
+            new(new(), -3, -2),
+            new(new(), 0, 1));
+#else
         var results = Fuzzy.DefineInputsByPeaks(
             -4,
-            new List<Fuzzy.PeakDefinition>()
+            7,
+            new Fuzzy.PeakDefinition[]
             {
                 new(new(), -3, -2),
                 new(new(), 0, 1),
-            },
-            7);
+            });
+#endif
         Assert.AreEqual(-4, results[0].X1);
         Assert.AreEqual(-3, results[0].X2);
         Assert.AreEqual(-2, results[0].X3);
@@ -121,13 +134,20 @@ public class Tests
         Fuzzy.Input ServiceWasExcellent = new(3, 5, 5, double.MaxValue);
         Fuzzy.Input ServiceWasOk = new(1, 3, 3, 5);
         Fuzzy.Input ServiceWasPoor = new(double.MinValue, 1, 1, 3);
+#if NET8_0_OR_GREATER
         Fuzzy.InputGroup Service = new(
-            new()
+            ServiceWasPoor,
+            ServiceWasOk,
+            ServiceWasExcellent);
+#else
+        var Service = new Fuzzy.InputGroup(
+            new Fuzzy.Input[]
             {
                 ServiceWasPoor,
                 ServiceWasOk,
                 ServiceWasExcellent
             });
+#endif
         Service.Fuzzify(3);
         Assert.AreEqual(0, ServiceWasExcellent.FX);
         Assert.AreEqual(1, ServiceWasOk.FX);
@@ -142,20 +162,26 @@ public class Tests
             double averageTip,
             double generousTip)
         {
-            // Define membership functions
+            // Define membership function trapezoids based on physical star values
             serviceWasExcellent = new(3, 5, 5, double.MaxValue);
             serviceWasOk = new(1, 3, 3, 5);
             serviceWasPoor = new(double.MinValue, 1, 1, 3);
             foodWasTerrible = new(double.MinValue, 1, 1, 3);
-            service = new(
-                new()
+#if NET8_0_OR_GREATER
+            // If you are using .net8 or later you can use params instead of explicit arrays
+            service = new Fuzzy.InputGroup(
+                serviceWasPoor, serviceWasOk, serviceWasExcellent);
+#else
+            service = new Fuzzy.InputGroup(
+                new Fuzzy.Input[]
                 {
                     serviceWasPoor,
                     serviceWasOk,
                     serviceWasExcellent
                 });
+#endif
             // Define the fuzzy IF/THEN rules
-            rules = new()
+            rules = new Fuzzy.Rule[]
             {
                 new(generousTip, () => serviceWasExcellent.FX),
                 new(averageTip, () => serviceWasOk.FX),
@@ -178,6 +204,6 @@ public class Tests
         readonly Fuzzy.Input serviceWasPoor;
         readonly Fuzzy.Input foodWasTerrible;
         readonly Fuzzy.InputGroup service;
-        readonly List<Fuzzy.Rule> rules;
+        readonly Fuzzy.Rule[] rules;
     }
 }
