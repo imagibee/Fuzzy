@@ -1,6 +1,6 @@
 export STARTDIR=$PWD
 cd Fuzzy.Tests
-dotnet coverage collect dotnet test -f xml --framework net7.0
+dotnet coverage collect dotnet test -f xml --framework net8.0
 reportgenerator "-reports:output.xml" "-targetdir:TestResults"
 open TestResults/index.html
 cd $STARTDIR

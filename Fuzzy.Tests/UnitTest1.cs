@@ -37,12 +37,14 @@ public class Tests
     [Test]
     public void TestInputFuzzification()
     {
-        Fuzzy.Input input = new(-2, 0, 0, 2);
+        Fuzzy.Input input = new(-2, -1, 1, 2);
         Assert.AreEqual(0, input.Fuzzify(-3));
         Assert.AreEqual(0, input.Fuzzify(-2));
-        Assert.AreEqual(.5, input.Fuzzify(-1));
+        Assert.AreEqual(.5, input.Fuzzify(-1.5));
+        Assert.AreEqual(1, input.Fuzzify(-1));
         Assert.AreEqual(1, input.Fuzzify(0));
-        Assert.AreEqual(.5, input.Fuzzify(1));
+        Assert.AreEqual(1, input.Fuzzify(1));
+        Assert.AreEqual(.5, input.Fuzzify(1.5));
         Assert.AreEqual(0, input.Fuzzify(2));
         Assert.AreEqual(0, input.Fuzzify(3));
     }
@@ -51,9 +53,10 @@ public class Tests
     public void TestAND()
     {
         Assert.AreEqual(.2, Fuzzy.AND(.2, .8), ALLOWEDERROR);
+        Assert.AreEqual(.2, Fuzzy.AND(.8, .2), ALLOWEDERROR);
         Assert.AreEqual(.2, Fuzzy.AND(new double[] { .2, .8 }), ALLOWEDERROR);
 #if NET8_0_OR_GREATER
-        Assert.AreEqual(.2, Fuzzy.AND(.2, .8 ), ALLOWEDERROR);
+        Assert.AreEqual(.2, Fuzzy.AND(.2, .3, .8 ), ALLOWEDERROR);
 #endif
     }
 
@@ -61,9 +64,10 @@ public class Tests
     public void TestOR()
     {
         Assert.AreEqual(.8, Fuzzy.OR(.2, .8), ALLOWEDERROR);
+        Assert.AreEqual(.8, Fuzzy.OR(.8, .2), ALLOWEDERROR);
         Assert.AreEqual(.8, Fuzzy.OR(new double[] { .2, .8 }), ALLOWEDERROR);
 #if NET8_0_OR_GREATER
-        Assert.AreEqual(.8, Fuzzy.OR(.2, .8), ALLOWEDERROR);
+        Assert.AreEqual(.8, Fuzzy.OR(.2, .3, .8), ALLOWEDERROR);
 #endif
     }
 
@@ -82,6 +86,16 @@ public class Tests
             new(30, () => .5),
         };
         Assert.AreEqual(20, Fuzzy.DefuzzifyByCentroid(rules));
+    }
+
+    [Test]
+    public void TestDefuzzifyByCentroidZero()
+    {
+        var rules = new Fuzzy.Rule[]
+        {
+            new(0, () => 0),
+        };
+        Assert.AreEqual(0, Fuzzy.DefuzzifyByCentroid(rules));
     }
 
     [Test]
