@@ -54,9 +54,10 @@ public class Tests
     {
         Assert.AreEqual(.2, Fuzzy.AND(.2, .8), ALLOWEDERROR);
         Assert.AreEqual(.2, Fuzzy.AND(.8, .2), ALLOWEDERROR);
-        Assert.AreEqual(.2, Fuzzy.AND(new double[] { .2, .8 }), ALLOWEDERROR);
 #if NET8_0_OR_GREATER
-        Assert.AreEqual(.2, Fuzzy.AND(.2, .3, .8 ), ALLOWEDERROR);
+        Assert.AreEqual(.2, Fuzzy.AND(.2, .3, .8), ALLOWEDERROR);
+#else
+        Assert.AreEqual(.2, Fuzzy.AND(new double[] { .2, .3, .8 }), ALLOWEDERROR);
 #endif
     }
 
@@ -65,9 +66,10 @@ public class Tests
     {
         Assert.AreEqual(.8, Fuzzy.OR(.2, .8), ALLOWEDERROR);
         Assert.AreEqual(.8, Fuzzy.OR(.8, .2), ALLOWEDERROR);
-        Assert.AreEqual(.8, Fuzzy.OR(new double[] { .2, .8 }), ALLOWEDERROR);
 #if NET8_0_OR_GREATER
         Assert.AreEqual(.8, Fuzzy.OR(.2, .3, .8), ALLOWEDERROR);
+#else
+        Assert.AreEqual(.8, Fuzzy.OR(new double[] { .2, .3, .8 }), ALLOWEDERROR);
 #endif
     }
 
