@@ -132,23 +132,23 @@ public class Tests
     public void ExampleTest()
     {
         // Tip Results
-MyTipCalculator tip = new()
-{
-    LowTip = 7.5,
-    AverageTip = 15,
-    GenerousTip = 25
-};
-Assert.AreEqual(25, tip.Calculate(5, 3), ALLOWEDERROR);
-Assert.AreEqual(20, tip.Calculate(4, 3), ALLOWEDERROR);
-Assert.AreEqual(17.5, tip.Calculate(3.5, 3), ALLOWEDERROR);
-Assert.AreEqual(15, tip.Calculate(3, 3), ALLOWEDERROR);
-Assert.AreEqual(14.1666666, tip.Calculate(3.5, 2), ALLOWEDERROR);
-Assert.AreEqual(12.5, tip.Calculate(3, 2), ALLOWEDERROR);
-Assert.AreEqual(11.25, tip.Calculate(3, 1), ALLOWEDERROR);
-Assert.AreEqual(10, tip.Calculate(2, 1), ALLOWEDERROR);
-Assert.AreEqual(7.5, tip.Calculate(1, 1), ALLOWEDERROR);
-tip.LowTip = 10;
-Assert.AreEqual(10, tip.Calculate(1, 1), ALLOWEDERROR);
+        MyTipCalculator tip = new()
+        {
+            LowTip = 7.5,
+            AverageTip = 15,
+            GenerousTip = 25
+        };
+        Assert.AreEqual(25, tip.Calculate(5, 3), ALLOWEDERROR);
+        Assert.AreEqual(20, tip.Calculate(4, 3), ALLOWEDERROR);
+        Assert.AreEqual(17.5, tip.Calculate(3.5, 3), ALLOWEDERROR);
+        Assert.AreEqual(15, tip.Calculate(3, 3), ALLOWEDERROR);
+        Assert.AreEqual(14.1666666, tip.Calculate(3.5, 2), ALLOWEDERROR);
+        Assert.AreEqual(12.5, tip.Calculate(3, 2), ALLOWEDERROR);
+        Assert.AreEqual(11.25, tip.Calculate(3, 1), ALLOWEDERROR);
+        Assert.AreEqual(10, tip.Calculate(2, 1), ALLOWEDERROR);
+        Assert.AreEqual(7.5, tip.Calculate(1, 1), ALLOWEDERROR);
+        tip.LowTip = 10;
+        Assert.AreEqual(10, tip.Calculate(1, 1), ALLOWEDERROR);
     }
 
     [Test]
