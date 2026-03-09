@@ -31,11 +31,12 @@ using Imagibee;
 
 public class MyTipCalculator
 {
+    public double LowTip;
+    public double AverageTip;
+    public double GenerousTip;
+
     // Construct a MyTipCalculator
-    public MyTipCalculator(
-        double lowTip,
-        double averageTip,
-        double generousTip)
+    public MyTipCalculator()
     {
         // Define membership function trapezoids based on physical star values
         serviceWasExcellent = new(3, 5, 5, double.MaxValue);
@@ -58,9 +59,9 @@ public class MyTipCalculator
         // Define the fuzzy IF/THEN rules
         rules = new Fuzzy.Rule[]
         {
-            new(() => generousTip, () => serviceWasExcellent.FX),
-            new(() => averageTip, () => serviceWasOk.FX),
-            new(() => lowTip, () => Fuzzy.OR(serviceWasPoor.FX, foodWasTerrible.FX)),
+            new(() => GenerousTip, () => serviceWasExcellent.FX),
+            new(() => AverageTip, () => serviceWasOk.FX),
+            new(() => LowTip, () => Fuzzy.OR(serviceWasPoor.FX, foodWasTerrible.FX)),
         };
     }
 
