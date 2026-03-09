@@ -3,9 +3,13 @@ Testing
 Scripts/test
 Scripts/coverage
 
+Reminders
+---------
+Update README
+Change PackageVersion in Fuzzy.csproj
+
 Nuget Package
 -------------
-(first change PackageVersion in Fuzzy.csproj)
 export MYVER=
 dotnet pack Fuzzy -c Release
 nuget add Fuzzy/bin/Release/Imagibee.Fuzzy.${MYVER}.nupkg -source ~/nuget

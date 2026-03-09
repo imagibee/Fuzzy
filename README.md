@@ -58,9 +58,9 @@ public class MyTipCalculator
         // Define the fuzzy IF/THEN rules
         rules = new Fuzzy.Rule[]
         {
-            new(generousTip, () => serviceWasExcellent.FX),
-            new(averageTip, () => serviceWasOk.FX),
-            new(lowTip, () => Fuzzy.OR(serviceWasPoor.FX, foodWasTerrible.FX)),
+            new(() => generousTip, () => serviceWasExcellent.FX),
+            new(() => averageTip, () => serviceWasOk.FX),
+            new(() => lowTip, () => Fuzzy.OR(serviceWasPoor.FX, foodWasTerrible.FX)),
         };
     }
 
@@ -85,7 +85,12 @@ public class MyTipCalculator
 
 And here are the tests that were used to validate this example ...
 ```csharp
-MyTipCalculator tip = new(7.5, 15, 25);
+MyTipCalculator tip = new()
+{
+    LowTip = 7.5,
+    AverageTip = 15,
+    GenerousTip = 25
+};
 Assert.AreEqual(25, tip.Calculate(5, 3), ALLOWEDERROR);
 Assert.AreEqual(20, tip.Calculate(4, 3), ALLOWEDERROR);
 Assert.AreEqual(17.5, tip.Calculate(3.5, 3), ALLOWEDERROR);
@@ -95,7 +100,8 @@ Assert.AreEqual(12.5, tip.Calculate(3, 2), ALLOWEDERROR);
 Assert.AreEqual(11.25, tip.Calculate(3, 1), ALLOWEDERROR);
 Assert.AreEqual(10, tip.Calculate(2, 1), ALLOWEDERROR);
 Assert.AreEqual(7.5, tip.Calculate(1, 1), ALLOWEDERROR);
-
+tip.LowTip = 10;
+Assert.AreEqual(10, tip.Calculate(1, 1), ALLOWEDERROR);
 ```
 ## Testing
 Run `Scripts/test`.

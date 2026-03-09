@@ -132,16 +132,23 @@ public class Tests
     public void ExampleTest()
     {
         // Tip Results
-        MyTipCalculator tip = new(7.5, 15, 25);
-        Assert.AreEqual(25, tip.Calculate(5, 3), ALLOWEDERROR);
-        Assert.AreEqual(20, tip.Calculate(4, 3), ALLOWEDERROR);
-        Assert.AreEqual(17.5, tip.Calculate(3.5, 3), ALLOWEDERROR);
-        Assert.AreEqual(15, tip.Calculate(3, 3), ALLOWEDERROR);
-        Assert.AreEqual(14.1666666, tip.Calculate(3.5, 2), ALLOWEDERROR);
-        Assert.AreEqual(12.5, tip.Calculate(3, 2), ALLOWEDERROR);
-        Assert.AreEqual(11.25, tip.Calculate(3, 1), ALLOWEDERROR);
-        Assert.AreEqual(10, tip.Calculate(2, 1), ALLOWEDERROR);
-        Assert.AreEqual(7.5, tip.Calculate(1, 1), ALLOWEDERROR);
+MyTipCalculator tip = new()
+{
+    LowTip = 7.5,
+    AverageTip = 15,
+    GenerousTip = 25
+};
+Assert.AreEqual(25, tip.Calculate(5, 3), ALLOWEDERROR);
+Assert.AreEqual(20, tip.Calculate(4, 3), ALLOWEDERROR);
+Assert.AreEqual(17.5, tip.Calculate(3.5, 3), ALLOWEDERROR);
+Assert.AreEqual(15, tip.Calculate(3, 3), ALLOWEDERROR);
+Assert.AreEqual(14.1666666, tip.Calculate(3.5, 2), ALLOWEDERROR);
+Assert.AreEqual(12.5, tip.Calculate(3, 2), ALLOWEDERROR);
+Assert.AreEqual(11.25, tip.Calculate(3, 1), ALLOWEDERROR);
+Assert.AreEqual(10, tip.Calculate(2, 1), ALLOWEDERROR);
+Assert.AreEqual(7.5, tip.Calculate(1, 1), ALLOWEDERROR);
+tip.LowTip = 10;
+Assert.AreEqual(10, tip.Calculate(1, 1), ALLOWEDERROR);
     }
 
     [Test]
@@ -172,11 +179,12 @@ public class Tests
 
     public class MyTipCalculator
     {
+        public double LowTip;
+        public double AverageTip;
+        public double GenerousTip;
+
         // Construct a MyTipCalculator
-        public MyTipCalculator(
-            double lowTip,
-            double averageTip,
-            double generousTip)
+        public MyTipCalculator()
         {
             // Define membership function trapezoids based on physical star values
             serviceWasExcellent = new(3, 5, 5, double.MaxValue);
@@ -199,9 +207,9 @@ public class Tests
             // Define the fuzzy IF/THEN rules
             rules = new Fuzzy.Rule[]
             {
-                new(() => generousTip, () => serviceWasExcellent.FX),
-                new(() => averageTip, () => serviceWasOk.FX),
-                new(() => lowTip, () => Fuzzy.OR(serviceWasPoor.FX, foodWasTerrible.FX)),
+                new(() => GenerousTip, () => serviceWasExcellent.FX),
+                new(() => AverageTip, () => serviceWasOk.FX),
+                new(() => LowTip, () => Fuzzy.OR(serviceWasPoor.FX, foodWasTerrible.FX)),
             };
         }
 
