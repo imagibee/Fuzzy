@@ -112,17 +112,18 @@ namespace Imagibee
         {
             // Construct a Rule
             //
-            // x - the physical value that equates to the rule output
+            // x - the physical value that equates to the rule output expressed
+            // as an anonymous function
             //
             // rfx - a fuzzy IF/THEN rule expressed as an anonymous function
             // that operates on one or more fuzzy inputs
-            public Rule(double x, Func<double> rfx)
+            public Rule(Func<double> x, Func<double> rfx)
             {
                 X = x;
                 RFX = rfx;
             }
             public Func<double> RFX { get; private set; }
-            public double X { get; private set; }
+            public Func<double> X { get; private set; }
         }
 
         // Used by DefineInputsByPeak
@@ -201,7 +202,7 @@ namespace Imagibee
             foreach (var rfx in rfxs)
             {
                 var fx = rfx.RFX();
-                nx += fx * rfx.X;
+                nx += fx * rfx.X();
                 dx += fx;
             }
             if (dx == 0 && nx == 0)

@@ -84,8 +84,8 @@ public class Tests
     {
         var rules = new Fuzzy.Rule[]
         {
-            new(10, () => .5),
-            new(30, () => .5),
+            new(() => 10, () => .5),
+            new(() => 30, () => .5),
         };
         Assert.AreEqual(20, Fuzzy.DefuzzifyByCentroid(rules));
     }
@@ -95,7 +95,7 @@ public class Tests
     {
         var rules = new Fuzzy.Rule[]
         {
-            new(0, () => 0),
+            new(() => 0, () => 0),
         };
         Assert.AreEqual(0, Fuzzy.DefuzzifyByCentroid(rules));
     }
@@ -199,9 +199,9 @@ public class Tests
             // Define the fuzzy IF/THEN rules
             rules = new Fuzzy.Rule[]
             {
-                new(generousTip, () => serviceWasExcellent.FX),
-                new(averageTip, () => serviceWasOk.FX),
-                new(lowTip, () => Fuzzy.OR(serviceWasPoor.FX, foodWasTerrible.FX)),
+                new(() => generousTip, () => serviceWasExcellent.FX),
+                new(() => averageTip, () => serviceWasOk.FX),
+                new(() => lowTip, () => Fuzzy.OR(serviceWasPoor.FX, foodWasTerrible.FX)),
             };
         }
 
