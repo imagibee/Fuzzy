@@ -28,8 +28,10 @@ namespace Imagibee
             //
             // Trapezoidal when x2 > x1, x3 > x2, x4 > x3
             // Trianglular when  x2 > x1, x3 == x2, x4 > x3
-            // Infinite left when x1 == double.MinValue
-            // Infinite right when x4 == double.MaxValue
+            // Box starting at x1 when x2 == x1
+            // Box ending at x4 when x3 == x4
+            // Infinite box left when x2 == x1 == double.MinValue
+            // Infinite box right when x3 == x4 == double.MaxValue
             //
             // x1 - the value of x where the left valley of the membership
             // trapezoid starts ascending from 0
@@ -107,37 +109,48 @@ namespace Imagibee
             }
         }
 
-        // Rule provides a way to combine fuzzy inputs into IF/THEN rules
+        // A Rule provides a way to express a physical output value in terms of
+        // fuzzy membership.  Rules are defined as lambda expressions to take advantage
+        // of the dynamic nature of the closure. Rules will be calculated using the
+        // values of the parameters enclosed by the lambda at the time of evaluation,
+        // not at the time of construction.
+        //
+        // In a typical scenario, a set of rules is constructed for a control system.
+        // These rules are then invoked periodically using DefuzzifyByCentroid to
+        // re-calculate the output using the current value of the inputs.
         public class Rule
         {
-            // Construct a Rule
+            public Func<double> Y { get; private set; }
+            public Func<double> FX { get; private set; }
+
+            // y - an anonymous function that defines a physical output value.  In many
+            // scenarios y will be a constant value.  In some scenarios it may be variable;
+            // for example, the maximum output value changes depending on the state of the
+            // system.
             //
-            // x - the physical value that equates to the rule output expressed
-            // as an anonymous function
-            //
-            // rfx - a fuzzy IF/THEN rule expressed as an anonymous function
-            // that operates on one or more fuzzy inputs
-            public Rule(Func<double> x, Func<double> rfx)
+            // fx - an anonymous function that defines the membership of the output value
+            // in terms of a fuzzy input(s).  In simplest form this is just the FX of single
+            // Input.  In other cases it is a combination of Inputs using AND/OR operations.
+            public Rule(Func<double> y, Func<double> fx)
             {
-                X = x;
-                RFX = rfx;
+                Y = y;
+                FX = fx;
             }
-            public Func<double> RFX { get; private set; }
-            public Func<double> X { get; private set; }
         }
 
         // Used by DefineInputsByPeak
         public class PeakDefinition
         {
-            public PeakDefinition(Input i, double x2, double x3)
+            public Input I;
+            public double X2;
+            public double X3;
+
+            public PeakDefinition(Fuzzy.Input i, double x2, double x3)
             {
                 I = i;
                 X2 = x2;
                 X3 = x3;
             }
-            public Input I;
-            public double X2;
-            public double X3;
         }
 
         // AND of fuzzified values
@@ -192,17 +205,17 @@ namespace Imagibee
         // DefuzzifyByCentroid defuzzifies rules back to a physical value by
         // using the centroid method
 #if NET8_0_OR_GREATER
-        public static double DefuzzifyByCentroid(params Rule[] rfxs)
+        public static double DefuzzifyByCentroid(params Rule[] rules)
 #else
-        public static double DefuzzifyByCentroid(Rule[] rfxs)
+        public static double DefuzzifyByCentroid(Rule[] rules)
 #endif
         {
             double nx = 0;
             double dx = 0;
-            foreach (var rfx in rfxs)
+            foreach (var rule in rules)
             {
-                var fx = rfx.RFX();
-                nx += fx * rfx.X();
+                var fx = rule.FX();
+                nx += fx * rule.Y();
                 dx += fx;
             }
             if (dx == 0 && nx == 0)
@@ -216,20 +229,22 @@ namespace Imagibee
             }
         }
 
-        // DefineInputsByPeaks is an even more convenient way to define inputs
+        // DefineInputsByPeaks simplifies creating a set of Input for the
+        // common case that the peaks and valleys of adjacent inputs are
+        // aligned to the same X values.
         //
         // Given only the peaks (X2, X3) the valleys (X1, X4) are inferred.
         // The valleys are figured so that the slopes of adjacent peaks cross
         // in the middle and reach zero at the adjacent peaks.  Peaks must be
         // given in ascending order.
         //
-        // startValley - the X1 value of first input be specified (use
+        // startValley - the X1 value of first input being specified (use
         // double.MinValue for infinite left)
         //
-        // inDefs - defines the PeakDefinition for each input
-        //
-        // endValley - the X4 valley of the last input be specified (use
+        // endValley - the X4 value of the last input being specified (use
         // double.MaxValue for infinite right)
+        //
+        // inDefs - defines the PeakDefinition for each input
 #if NET8_0_OR_GREATER
         public static Input[] DefineInputsByPeaks(
             double startValley,

@@ -154,9 +154,9 @@ public class Tests
     [Test]
     public void FuzzifyTest()
     {
-        Fuzzy.Input ServiceWasExcellent = new(3, 5, 5, double.MaxValue);
+        Fuzzy.Input ServiceWasExcellent = new(3, 5, double.MaxValue, double.MaxValue);
         Fuzzy.Input ServiceWasOk = new(1, 3, 3, 5);
-        Fuzzy.Input ServiceWasPoor = new(double.MinValue, 1, 1, 3);
+        Fuzzy.Input ServiceWasPoor = new(double.MinValue, double.MinValue, 1, 3);
 #if NET8_0_OR_GREATER
         Fuzzy.InputGroup Service = new(
             ServiceWasPoor,
@@ -187,14 +187,14 @@ public class Tests
         public MyTipCalculator()
         {
             // Define membership function trapezoids based on physical star values
-            serviceWasExcellent = new(3, 5, 5, double.MaxValue);
+            serviceWasExcellent = new(3, 5, double.MaxValue, double.MaxValue);
             serviceWasOk = new(1, 3, 3, 5);
-            serviceWasPoor = new(double.MinValue, 1, 1, 3);
-            foodWasTerrible = new(double.MinValue, 1, 1, 3);
+            serviceWasPoor = new(double.MinValue, double.MinValue, 1, 3);
+            foodWasTerrible = new(double.MinValue, double.MinValue, 1, 3);
+
+            // Define an input group which are all fuzzified by the same input (serviceStars)
 #if NET8_0_OR_GREATER
-            // If you are using .net8 or later you can use params instead of explicit arrays
-            service = new Fuzzy.InputGroup(
-                serviceWasPoor, serviceWasOk, serviceWasExcellent);
+            service = new Fuzzy.InputGroup(serviceWasPoor, serviceWasOk, serviceWasExcellent);
 #else
             service = new Fuzzy.InputGroup(
                 new Fuzzy.Input[]
@@ -204,12 +204,13 @@ public class Tests
                     serviceWasExcellent
                 });
 #endif
-            // Define the fuzzy IF/THEN rules
+
+            // Define the fuzzy rules
             rules = new Fuzzy.Rule[]
             {
                 new(() => GenerousTip, () => serviceWasExcellent.FX),
                 new(() => AverageTip, () => serviceWasOk.FX),
-                new(() => LowTip, () => Fuzzy.OR(serviceWasPoor.FX, foodWasTerrible.FX)),
+                new(() => LowTip, () => Fuzzy.OR(serviceWasPoor.FX, foodWasTerrible.FX))
             };
         }
 

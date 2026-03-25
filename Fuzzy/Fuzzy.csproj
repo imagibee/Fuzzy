@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <PackageId>Imagibee.Fuzzy</PackageId>
-    <PackageVersion>3.0.2</PackageVersion>
+    <PackageVersion>4.0.0</PackageVersion>
     <Authors>dynamicbutter</Authors>
-    <Description>A lightweight fuzzy logic library inspired by Mamdani</Description>
+    <Description>A lightweight C# library for Mamdani-type fuzzy inference</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Copyright>Copyright (c) Imagibee 2025</Copyright>

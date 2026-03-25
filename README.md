@@ -1,31 +1,29 @@
-# Fuzzy
-A lightweight fuzzy logic library inspired by Mamdani
+# Imagibee.Fuzzy
+## A lightweight C# library for Mamdani-type fuzzy inference
 
-The primary goal of this project is to to provide a tested library of C# classes and functions that support the development of fuzzy logic controllers within C# projects.
+The primary goal of this project is to to provide a simple library that supports creating  fuzzy logic controllers within C# code.  It's features center around the implementation of these controllers with a minimalist approach.  It is not intended to be a design or visualization tool.
 
-I have intentionally avoided using interpreted strings to name fuzzy variables, define fuzzy rules, etc.  Instead I have chosen to embrace C#'s built-in features for symbol naming and anonymous functions.  This approach reduces complexity and improves performance at the cost of being less purist which I feel is a good tradeoff for a lightweight library.
+If you already have (or can create) a set of fuzzy rules, and simply want to implement these rules in your C# code with minimal fuss, then this might be the library for you.  On the otherhand, if you are looking for a tool to help you design or visualize a fuzzy controller then you will want to look elsewhere.
 
 ## API
-Here is an overview of the API.  Refer to the [source code](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy/Fuzzy.cs) for details.  There is also an example in the next section, or feel free to look at the [unit tests](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy.Tests/UnitTest1.cs) if that is helpful.
+Here are the main pieces of the API.  Refer to the [source code](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy/Fuzzy.cs) for details.  There is also an example in the next section, or feel free to look at the [unit tests](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy.Tests/UnitTest1.cs) if that is helpful.
 
-- `static class Imagibee.Fuzzy` - contains the whole library
-- `class Imagibee.Fuzzy.Input` - for defining trapezoidal, triangular, or box membership functions and fuzzifying physical values
-- `class Imagibee.Fuzzy.InputGroup` - a convenient way to fuzzify a group of inputs that derive their fuzzy values from the same physical value
-- `class Imagibee.Fuzzy.Rule` - for combining fuzzy inputs into IF/THEN rules
-- `function Imagibee.Fuzzy.DefuzzifyByCentroid` - defuzzify rules to a physical value
-- `function Imagibee.Fuzzy.DefineInputsByPeaks` - An even more convenient way to define inputs that should work for most cases
-- `class Imagibee.Fuzzy.PeakDefinition` - used by DefineInputsByPeaks
+- `Imagibee.Fuzzy.Input` - define trapezoidal, triangular, or box membership functions
+- `Imagibee.Fuzzy.Rule` - combine fuzzy inputs into IF/THEN rules
+- `Imagibee.Fuzzy.DefuzzifyByCentroid` - defuzzify rules to a physical value
 
+## A note about `Rule` evaluation
+You may have noticed that `Rule` relies on lambda expressions (as opposed to constants).  And if so you may be wondering why that is.  The idea is to have a simple way to define rules once but evaluate them over and over in the control loop.  The way the C# language defines closures for lambda functions provides a flexible and convenient way to do this.  The rules are evaluated each time `DefuzzifyByCentroid` is called, not merely when they are constructed.
 
 ## Example - fuzzy tip calculator
-Here is an example that demonstrates how you might want to use this library.  It shows how you could implement a fuzzy-logic tip calculator.  The kind of thing you would use to calculate a tip when you eat at a restaraunt.  For the sake of this exampe, the physical value of the tip ranges between 7.5% to 25%.  The tip is the ultimate value we want to get from our calculator so we can pay our waiter fairly.  The service rating ranges from 1-5 stars, and it is a physical input value based on how good you thought the service was.  The food rating also ranges from 1-5 stars, and it is another physical input value based on how good you thought the food was.
+Here is an example that demonstrates how you could use this library.  It implements a fuzzy-logic tip calculator for computing the waiter's tip at a restaraunt.  The tip ranges between 7.5% to 25%, and it is the value we want to calculate so we can pay our waiter fairly.  The tip is calculated based on a combination of the service and food rating (each between 1-5 stars).
 
 Here are the rules ...
-- `IF` the service was excellent `THEN` the tip should be generous
-- `IF` the service was ok `THEN` the tip should be average
-- `IF` the service was poor `OR` the food was terrible `THEN` the tip should be low
+- `IF` (the service was excellent) `THEN` (the tip should be generous)
+- `IF` (the service was ok) `THEN` (the tip should be average)
+- `IF` (the service was poor `OR` the food was terrible) `THEN` (the tip should be low)
 
-And here is how I would code the rules ...
+And here is one way to code these rules ...
 ```csharp
 using Imagibee;
 
@@ -38,15 +36,15 @@ public class MyTipCalculator
     // Construct a MyTipCalculator
     public MyTipCalculator()
     {
-        // Define membership function trapezoids based on physical star values
-        serviceWasExcellent = new(3, 5, 5, double.MaxValue);
+        // Define membership function trapezoids based on star values
+        serviceWasExcellent = new(3, 5, double.MaxValue, double.MaxValue);
         serviceWasOk = new(1, 3, 3, 5);
-        serviceWasPoor = new(double.MinValue, 1, 1, 3);
-        foodWasTerrible = new(double.MinValue, 1, 1, 3);
+        serviceWasPoor = new(double.MinValue, double.MinValue, 1, 3);
+        foodWasTerrible = new(double.MinValue, double.MinValue, 1, 3);
+
+        // Define an input group which are all fuzzified by the same input (serviceStars)
 #if NET8_0_OR_GREATER
-        // If you are using .net8 or later you can use params instead of explicit arrays
-        service = new Fuzzy.InputGroup(
-            serviceWasPoor, serviceWasOk, serviceWasExcellent);
+        service = new Fuzzy.InputGroup(serviceWasPoor, serviceWasOk, serviceWasExcellent);
 #else
         service = new Fuzzy.InputGroup(
             new Fuzzy.Input[]
@@ -56,12 +54,13 @@ public class MyTipCalculator
                 serviceWasExcellent
             });
 #endif
-        // Define the fuzzy IF/THEN rules
+
+        // Define the fuzzy rules
         rules = new Fuzzy.Rule[]
         {
             new(() => GenerousTip, () => serviceWasExcellent.FX),
             new(() => AverageTip, () => serviceWasOk.FX),
-            new(() => LowTip, () => Fuzzy.OR(serviceWasPoor.FX, foodWasTerrible.FX)),
+            new(() => LowTip, () => Fuzzy.OR(serviceWasPoor.FX, foodWasTerrible.FX))
         };
     }
 
