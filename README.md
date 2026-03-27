@@ -6,14 +6,14 @@ The primary goal of this project is to to provide a simple library that supports
 If you already have (or can create) a set of fuzzy rules, and simply want to implement these rules in your C# code with minimal fuss, then this might be the library for you.  On the otherhand, if you are looking for a tool to help you design or visualize a fuzzy controller then you will want to look elsewhere.
 
 ## API
-Here are the main pieces of the API.  Refer to the [source code](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy/Fuzzy.cs) for details.  There is also an example in the next section, or feel free to look at the [unit tests](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy.Tests/UnitTest1.cs) if that is helpful.
+Here are the main pieces of the API.  Refer to the [source code](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy/Fuzzy.cs) for details.  There is also an example later in this document, or feel free to look at the [unit tests](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy.Tests/UnitTest1.cs) if that is helpful.
 
 - `Imagibee.Fuzzy.Input` - define trapezoidal, triangular, or box membership functions
 - `Imagibee.Fuzzy.Rule` - combine fuzzy inputs into IF/THEN rules
 - `Imagibee.Fuzzy.DefuzzifyByCentroid` - defuzzify rules to a physical value
 
 ## A note about `Rule` evaluation
-You may have noticed that `Rule` relies on lambda expressions (as opposed to constants).  And if so you may be wondering why that is.  The idea is to have a simple way to define rules once but evaluate them over and over in the control loop.  The way the C# language defines closures for lambda functions provides a flexible and convenient way to do this.  The rules are evaluated each time `DefuzzifyByCentroid` is called, not merely when they are constructed.
+You may have noticed that `Rule` relies on lambda expressions (as opposed to constants).  And if so you may be wondering why that is.  The idea is to have a simple way to define rules once but evaluate them over and over in the control loop.  The way the C# language defines closures for lambda functions provides a flexible and convenient way to do this since lambdas capture references, not their values at the time the lambda is created.  So the values captured in the rules are evaluated each time `DefuzzifyByCentroid` is called, not merely when they are constructed.
 
 ## Example - fuzzy tip calculator
 Here is an example that demonstrates how you could use this library.  It implements a fuzzy-logic tip calculator for computing the waiter's tip at a restaraunt.  The tip ranges between 7.5% to 25%, and it is the value we want to calculate so we can pay our waiter fairly.  The tip is calculated based on a combination of the service and food rating (each between 1-5 stars).
@@ -29,31 +29,78 @@ using Imagibee;
 
 public class MyTipCalculator
 {
+    // Calculator properties
     public double LowTip;
     public double AverageTip;
     public double GenerousTip;
 
+    // Storage for the inputs and rules
+    readonly Fuzzy.Input serviceWasExcellent;
+    readonly Fuzzy.Input serviceWasOk;
+    readonly Fuzzy.Input serviceWasPoor;
+    readonly Fuzzy.Input foodWasTerrible;
+    readonly Fuzzy.InputGroup service;
+    readonly Fuzzy.Rule[] rules;
+
     // Construct a MyTipCalculator
     public MyTipCalculator()
     {
-        // Define membership function trapezoids based on star values
-        serviceWasExcellent = new(3, 5, double.MaxValue, double.MaxValue);
-        serviceWasOk = new(1, 3, 3, 5);
-        serviceWasPoor = new(double.MinValue, double.MinValue, 1, 3);
-        foodWasTerrible = new(double.MinValue, double.MinValue, 1, 3);
+        // Define membership function for 1-5 star service rating (5 stars = best)
+        //
+        // serviceWasExcellent
+        //    (FX)
+        //     |
+        // 1.0 |                     ----
+        //     |                   /
+        //     |                 /
+        //     |               /
+        //     |             /
+        // 0.0 | -----------
+        // ___________________________________ service stars (X)
+        //     |    1   2   3   4   5
+        serviceWasExcellent = new Fuzzy.Input(3, 5, double.MaxValue, double.MaxValue);
 
-        // Define an input group which are all fuzzified by the same input (serviceStars)
-#if NET8_0_OR_GREATER
-        service = new Fuzzy.InputGroup(serviceWasPoor, serviceWasOk, serviceWasExcellent);
-#else
-        service = new Fuzzy.InputGroup(
-            new Fuzzy.Input[]
-            {
-                serviceWasPoor,
-                serviceWasOk,
-                serviceWasExcellent
-            });
-#endif
+        // serviceWasOk
+        //    (FX)
+        //     |
+        // 1.0 |            -
+        //     |           /  \
+        //     |         /      \
+        //     |       /          \
+        //     |     /              \
+        // 0.0 | ---                 ----
+        // ___________________________________ service stars (X)
+        //     |    1   2   3   4   5
+        serviceWasOk = new Fuzzy.Input(1, 3, 3, 5);
+
+        // serviceWasPoor
+        //    (FX)
+        //     |
+        // 1.0 | ---
+        //     |     \
+        //     |       \
+        //     |         \
+        //     |           \
+        // 0.0 |             -----------
+        // ___________________________________ service stars (X)
+        //     |    1   2   3   4   5
+        serviceWasPoor = new Fuzzy.Input(double.MinValue, double.MinValue, 1, 3);
+
+        // Define membership function for 1-5 star food rating (5 stars = best)
+        //
+        // foodWasTerrible
+        //    (FX)
+        //     |
+        // 1.0 | ---
+        //     |     \
+        //     |       \
+        //     |         \
+        //     |           \
+        // 0.0 |             -----------
+        // ___________________________________ food stars (X)
+        //     |    1   2   3   4   5
+        foodWasTerrible = new Fuzzy.Input(double.MinValue, double.MinValue, 1, 3);
+
 
         // Define the fuzzy rules
         rules = new Fuzzy.Rule[]
@@ -62,24 +109,29 @@ public class MyTipCalculator
             new(() => AverageTip, () => serviceWasOk.FX),
             new(() => LowTip, () => Fuzzy.OR(serviceWasPoor.FX, foodWasTerrible.FX))
         };
+
+        // Define an input group for serviceStars (optional, for convenience only)
+        service = new Fuzzy.InputGroup(
+            new Fuzzy.Input[]
+            {
+                serviceWasPoor,
+                serviceWasOk,
+                serviceWasExcellent
+            });
     }
 
+    // Calculate a new tip value based on service rating and food rating
     public double Calculate(double serviceStars, double foodStars)
     {
-        // Convert physical star values to fuzzy values
+        // Fuzzify 1-5 star service rating
         service.Fuzzify(serviceStars);
+
+        // Fuzzify 1-5 star food rating
         foodWasTerrible.Fuzzify(foodStars);
-        // Apply rules to convert fuzzy inputs to a physical tip value
+
+        // Defuzzify rules and return the physical tip value
         return Fuzzy.DefuzzifyByCentroid(rules);
     }
-
-    // private data
-    readonly Fuzzy.Input serviceWasExcellent;
-    readonly Fuzzy.Input serviceWasOk;
-    readonly Fuzzy.Input serviceWasPoor;
-    readonly Fuzzy.Input foodWasTerrible;
-    readonly Fuzzy.InputGroup service;
-    readonly Fuzzy.Rule[] rules;
 }
 ```
 
