@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Imagibee
 {
-    // A lightweight fuzzy logic library inspired by Mamdani
+    // A lightweight C# library for Mamdani-type fuzzy inference
     public static class Fuzzy
     {
         // The Input class is used for defining trapezoidal, triangular, or box
@@ -84,8 +84,8 @@ namespace Imagibee
             }
         }
 
-        // InputGroup provides a convenient way to map a group of inputs
-        // to the same physical value
+        // InputGroup provides a convenient way to fuzzify a set of inputs from
+        // the same physical value
         public class InputGroup
         {
             readonly Input[] group;
@@ -98,8 +98,7 @@ namespace Imagibee
             {
                 group = inputs;
             }
-            // Map the physical value x to a fuzzy value fx for each input in
-            // the group
+            // Fuzzify each input from the same physical value (x)
             public void Fuzzify(double x)
             {
                 foreach (var input in group)
@@ -138,7 +137,7 @@ namespace Imagibee
             }
         }
 
-        // Used by DefineInputsByPeak
+        // Define peaks used by DefineInputsByPeak
         public class PeakDefinition
         {
             public Input I;

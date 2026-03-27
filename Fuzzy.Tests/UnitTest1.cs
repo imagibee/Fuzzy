@@ -179,20 +179,87 @@ public class Tests
 
     public class MyTipCalculator
     {
+        // Calculator properties
         public double LowTip;
         public double AverageTip;
         public double GenerousTip;
 
+        // Storage for the inputs and rules
+        readonly Fuzzy.Input serviceWasExcellent;
+        readonly Fuzzy.Input serviceWasOk;
+        readonly Fuzzy.Input serviceWasPoor;
+        readonly Fuzzy.Input foodWasTerrible;
+        readonly Fuzzy.InputGroup service;
+        readonly Fuzzy.Rule[] rules;
+
         // Construct a MyTipCalculator
         public MyTipCalculator()
         {
-            // Define membership function trapezoids based on physical star values
-            serviceWasExcellent = new(3, 5, double.MaxValue, double.MaxValue);
-            serviceWasOk = new(1, 3, 3, 5);
-            serviceWasPoor = new(double.MinValue, double.MinValue, 1, 3);
-            foodWasTerrible = new(double.MinValue, double.MinValue, 1, 3);
+            // Define membership function for 1-5 star service rating (5 stars = best)
+            //
+            // serviceWasExcellent
+            //    (FX)
+            //     |
+            // 1.0 |                     ----
+            //     |                   /
+            //     |                 /
+            //     |               /
+            //     |             /
+            // 0.0 | -----------
+            // ___________________________________ service stars (X)
+            //     |    1   2   3   4   5
+            serviceWasExcellent = new Fuzzy.Input(3, 5, double.MaxValue, double.MaxValue);
 
-            // Define an input group which are all fuzzified by the same input (serviceStars)
+            // serviceWasOk
+            //    (FX)
+            //     |
+            // 1.0 |            -
+            //     |           /  \
+            //     |         /      \
+            //     |       /          \
+            //     |     /              \
+            // 0.0 | ---                 ----
+            // ___________________________________ service stars (X)
+            //     |    1   2   3   4   5
+            serviceWasOk = new Fuzzy.Input(1, 3, 3, 5);
+
+            // serviceWasPoor
+            //    (FX)
+            //     |
+            // 1.0 | ---
+            //     |     \
+            //     |       \
+            //     |         \
+            //     |           \
+            // 0.0 |             -----------
+            // ___________________________________ service stars (X)
+            //     |    1   2   3   4   5
+            serviceWasPoor = new Fuzzy.Input(double.MinValue, double.MinValue, 1, 3);
+
+            // Define membership function for 1-5 star food rating (5 stars = best)
+            //
+            // foodWasTerrible
+            //    (FX)
+            //     |
+            // 1.0 | ---
+            //     |     \
+            //     |       \
+            //     |         \
+            //     |           \
+            // 0.0 |             -----------
+            // ___________________________________ food stars (X)
+            //     |    1   2   3   4   5
+            foodWasTerrible = new Fuzzy.Input(double.MinValue, double.MinValue, 1, 3);
+
+            // Define the fuzzy rules
+            rules = new Fuzzy.Rule[]
+            {
+                new(() => GenerousTip, () => serviceWasExcellent.FX),
+                new(() => AverageTip, () => serviceWasOk.FX),
+                new(() => LowTip, () => Fuzzy.OR(serviceWasPoor.FX, foodWasTerrible.FX))
+            };
+
+            // Define an input group for serviceStars (optional, for convenience only)
 #if NET8_0_OR_GREATER
             service = new Fuzzy.InputGroup(serviceWasPoor, serviceWasOk, serviceWasExcellent);
 #else
@@ -204,31 +271,19 @@ public class Tests
                     serviceWasExcellent
                 });
 #endif
-
-            // Define the fuzzy rules
-            rules = new Fuzzy.Rule[]
-            {
-                new(() => GenerousTip, () => serviceWasExcellent.FX),
-                new(() => AverageTip, () => serviceWasOk.FX),
-                new(() => LowTip, () => Fuzzy.OR(serviceWasPoor.FX, foodWasTerrible.FX))
-            };
         }
 
+        // Calculate a new tip value based on service rating and food rating
         public double Calculate(double serviceStars, double foodStars)
         {
-            // Convert physical star values to fuzzy values
+            // Fuzzify 1-5 star service rating
             service.Fuzzify(serviceStars);
+
+            // Fuzzify 1-5 star food rating
             foodWasTerrible.Fuzzify(foodStars);
-            // Apply rules to convert fuzzy inputs to a physical tip value
+
+            // Defuzzify rules and return the physical tip value
             return Fuzzy.DefuzzifyByCentroid(rules);
         }
-
-        // private data
-        readonly Fuzzy.Input serviceWasExcellent;
-        readonly Fuzzy.Input serviceWasOk;
-        readonly Fuzzy.Input serviceWasPoor;
-        readonly Fuzzy.Input foodWasTerrible;
-        readonly Fuzzy.InputGroup service;
-        readonly Fuzzy.Rule[] rules;
     }
 }
