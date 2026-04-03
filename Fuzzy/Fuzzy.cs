@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Imagibee
 {
-    // A lightweight C# library for Mamdani-type fuzzy inference
+    // A lightweight C# library for efficient zero-order Sugeno fuzzy inference models
     public static class Fuzzy
     {
         // The Input class is used for defining trapezoidal, triangular, or box
@@ -115,7 +115,7 @@ namespace Imagibee
         // not at the time of construction.
         //
         // In a typical scenario, a set of rules is constructed for a control system.
-        // These rules are then invoked periodically using DefuzzifyByCentroid to
+        // These rules are then invoked periodically using Defuzzify to
         // re-calculate the output using the current value of the inputs.
         public class Rule
         {
@@ -201,12 +201,11 @@ namespace Imagibee
             return 1 - fx;
         }
 
-        // DefuzzifyByCentroid defuzzifies rules back to a physical value by
-        // using the centroid method
+        // Defuzzify defuzzifies rules back to a physical value
 #if NET8_0_OR_GREATER
-        public static double DefuzzifyByCentroid(params Rule[] rules)
+        public static double Defuzzify(params Rule[] rules)
 #else
-        public static double DefuzzifyByCentroid(Rule[] rules)
+        public static double Defuzzify(Rule[] rules)
 #endif
         {
             double nx = 0;

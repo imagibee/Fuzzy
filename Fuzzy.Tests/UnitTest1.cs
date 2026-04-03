@@ -80,24 +80,24 @@ public class Tests
     }
 
     [Test]
-    public void TestDefuzzifyByCentroid()
+    public void TestDefuzzify()
     {
         var rules = new Fuzzy.Rule[]
         {
             new(() => 10, () => .5),
             new(() => 30, () => .5),
         };
-        Assert.AreEqual(20, Fuzzy.DefuzzifyByCentroid(rules));
+        Assert.AreEqual(20, Fuzzy.Defuzzify(rules));
     }
 
     [Test]
-    public void TestDefuzzifyByCentroidZero()
+    public void TestDefuzzifyZero()
     {
         var rules = new Fuzzy.Rule[]
         {
             new(() => 0, () => 0),
         };
-        Assert.AreEqual(0, Fuzzy.DefuzzifyByCentroid(rules));
+        Assert.AreEqual(0, Fuzzy.Defuzzify(rules));
     }
 
     [Test]
@@ -283,7 +283,7 @@ public class Tests
             foodWasTerrible.Fuzzify(foodStars);
 
             // Defuzzify rules and return the physical tip value
-            return Fuzzy.DefuzzifyByCentroid(rules);
+            return Fuzzy.Defuzzify(rules);
         }
     }
 }

@@ -1,19 +1,19 @@
 # Imagibee.Fuzzy
-## A lightweight C# library for Mamdani-type fuzzy inference
+## A lightweight C# library for efficient fuzzy logic controllers
 
-The primary goal of this project is to to provide a simple library that supports creating  fuzzy logic controllers within C# code.  It's features center around the implementation of these controllers with a minimalist approach.  It is not intended to be a design or visualization tool.
+The primary goal of this project is to to provide a simple and efficient library that supports creating fuzzy logic controllers within C# code.  It's features center around the implementation of these controllers not around design, visualization, or academics.  It is intended for creating efficient, easy-to-use controllers for applications such as video games.
 
-If you already have (or can create) a set of fuzzy rules, and simply want to implement these rules in your C# code with minimal fuss, then this might be the library for you.  On the otherhand, if you are looking for a tool to help you design or visualize a fuzzy controller then you will want to look elsewhere.
+If you already have (or can create) a set of fuzzy rules, and simply want to implement these rules in your C# code with minimal fuss, using a zero-order Sugeno fuzzy inference model, then this might be the library for you.  On the other hand, if you are looking for a tool to help you design or visualize a fuzzy controller then you will want to look elsewhere.
 
 ## API
-Here are the main pieces of the API.  Refer to the [source code](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy/Fuzzy.cs) for details.  There is also an example later in this document, or feel free to look at the [unit tests](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy.Tests/UnitTest1.cs) if that is helpful.
+Here are the main API's.  Refer to the [source code](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy/Fuzzy.cs) for details.  There is also an example later in this document, or feel free to look at the [unit tests](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy.Tests/UnitTest1.cs) if that is helpful.
 
 - `Imagibee.Fuzzy.Input` - define trapezoidal, triangular, or box membership functions
 - `Imagibee.Fuzzy.Rule` - combine fuzzy inputs into IF/THEN rules
-- `Imagibee.Fuzzy.DefuzzifyByCentroid` - defuzzify rules to a physical value
+- `Imagibee.Fuzzy.Defuzzify` - defuzzify rules to a physical value
 
 ## A note about `Rule` evaluation
-You may have noticed that `Rule` relies on lambda expressions (as opposed to constants).  And if so you may be wondering why that is.  The idea is to have a simple way to define rules once but evaluate them over and over in the control loop.  The way the C# language defines closures for lambda functions provides a flexible and convenient way to do this since lambdas capture references, not their values at the time the lambda is created.  So the values captured in the rules are evaluated each time `DefuzzifyByCentroid` is called, not merely when they are constructed.
+You may have noticed that `Rule` relies on lambda expressions (as opposed to constants).  And if so you may be wondering why that is.  The idea is to have a simple way to define rules once but evaluate them over and over in the control loop.  The way the C# language defines closures for lambda functions provides a flexible and convenient way to do this since lambdas capture references, not their values at the time the lambda is created.  So the values captured in the rules are evaluated each time `Defuzzify` is called, not merely when they are constructed.
 
 ## Example - fuzzy tip calculator
 Here is an example that demonstrates how you could use this library.  It implements a fuzzy-logic tip calculator for computing the waiter's tip at a restaraunt.  The tip ranges between 7.5% to 25%, and it is the value we want to calculate so we can pay our waiter fairly.  The tip is calculated based on a combination of the service and food rating (each between 1-5 stars).
@@ -130,7 +130,7 @@ public class MyTipCalculator
         foodWasTerrible.Fuzzify(foodStars);
 
         // Defuzzify rules and return the physical tip value
-        return Fuzzy.DefuzzifyByCentroid(rules);
+        return Fuzzy.Defuzzify(rules);
     }
 }
 ```
