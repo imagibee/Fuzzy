@@ -2,9 +2,11 @@ using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 
+#pragma warning disable 8600, 8603
+
 namespace Imagibee
 {
-    // A lightweight C# library for efficient zero-order Sugeno fuzzy inference models
+    // A lightweight C# library for implementing efficient fuzzy logic controllers
     public static class Fuzzy
     {
         // The Input class is used for defining trapezoidal, triangular, or box
@@ -84,27 +86,16 @@ namespace Imagibee
             }
         }
 
-        // InputGroup provides a convenient way to fuzzify a set of inputs from
-        // the same physical value
-        public class InputGroup
-        {
-            readonly Input[] group;
-
+        // Map the physical value x to a fuzzy value fx
 #if NET8_0_OR_GREATER
-            public InputGroup(params Input[] inputs)
+        public static void Fuzzify(double x, params Input[] inputs)
 #else
-            public InputGroup(Input[] inputs)
+        public static void Fuzzify(double x, Input[] inputs)
 #endif
+        {
+            foreach (var i in inputs)
             {
-                group = inputs;
-            }
-            // Fuzzify each input from the same physical value (x)
-            public void Fuzzify(double x)
-            {
-                foreach (var input in group)
-                {
-                    input.Fuzzify(x);
-                }
+                i.Fuzzify(x);
             }
         }
 
@@ -119,21 +110,19 @@ namespace Imagibee
         // re-calculate the output using the current value of the inputs.
         public class Rule
         {
+            public Input I { get; private set; }
             public Func<double> Y { get; private set; }
-            public Func<double> FX { get; private set; }
 
-            // y - an anonymous function that defines a physical output value.  In many
-            // scenarios y will be a constant value.  In some scenarios it may be variable;
-            // for example, the maximum output value changes depending on the state of the
-            // system.
+            // i - the fuzzy input that belongs to the rule.
             //
-            // fx - an anonymous function that defines the membership of the output value
-            // in terms of a fuzzy input(s).  In simplest form this is just the FX of single
-            // Input.  In other cases it is a combination of Inputs using AND/OR operations.
-            public Rule(Func<double> y, Func<double> fx)
+            // y - an anonymous function that defines a physical output value.  In many
+            // scenarios y will be a constant value (zero-order).  In other scenarios it
+            // may be variable; for example, a threshold value changes depending on the
+            // state of the system.
+            public Rule(Input i, Func<double> y)
             {
+                I = i;
                 Y = y;
-                FX = fx;
             }
         }
 
@@ -153,52 +142,56 @@ namespace Imagibee
         }
 
         // AND of fuzzified values
-        public static double AND(double fx1, double fx2)
+        public static Input AND(Input i1, Input i2)
         {
-            return fx1 < fx2 ? fx1 : fx2;
+            return i1.FX < i2.FX ? i1 : i2;
         }
 #if NET8_0_OR_GREATER
-        public static double AND(params double[] fxs)
+        public static Input AND(params Input[] inputs)
 #else
-        public static double AND(double[] fxs)
+        public static Input AND(Input[] inputs)
 #endif
         {
-            double fxMin = double.MaxValue;
-            foreach (var fx in fxs)
+            Input iMin = null;
+            foreach (var i in inputs)
             {
-                if (fx < fxMin)
+                if (iMin == null || i.FX < iMin.FX)
                 {
-                    fxMin = fx;
+                    iMin = i;
                 }
             }
-            return fxMin;
+            return iMin;
         }
 
         // OR of fuzzified values
-        public static double OR(double fx1, double fx2)
+        public static Input OR(Input i1, Input i2)
         {
-            return fx1 > fx2 ? fx1 : fx2;
+            return i1.FX > i2.FX ? i1 : i2;
         }
 #if NET8_0_OR_GREATER
-        public static double OR(params double[] fxs)
+        public static Input OR(params Input[] inputs)
 #else
-        public static double OR(double[] fxs)
+        public static Input OR(Input[] inputs)
 #endif
         {
-            double fxMax = double.MinValue;
-            foreach (var fx in fxs)
+            Input iMax = null;
+            foreach (var i in inputs)
             {
-                if (fx > fxMax)
+                if (iMax == null || i.FX > iMax.FX)
                 {
-                    fxMax = fx;
+                    iMax = i;
                 }
             }
-            return fxMax;
+            return iMax;
         }
         // NOT of a fuzzified value
-        public static double NOT(double fx)
+        public static Input NOT(Input i)
         {
-            return 1 - fx;
+            Input result = new(i.X1, i.X2, i.X3, i.X4)
+            {
+                FX = 1 - i.FX
+            };
+            return result;
         }
 
         // Defuzzify defuzzifies rules back to a physical value
@@ -212,7 +205,7 @@ namespace Imagibee
             double dx = 0;
             foreach (var rule in rules)
             {
-                var fx = rule.FX();
+                var fx = rule.I.FX;
                 nx += fx * rule.Y();
                 dx += fx;
             }

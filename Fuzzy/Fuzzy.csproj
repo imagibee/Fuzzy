@@ -4,7 +4,7 @@
     <PackageId>Imagibee.Fuzzy</PackageId>
     <PackageVersion>5.0.0</PackageVersion>
     <Authors>dynamicbutter</Authors>
-    <Description>A lightweight C# library for efficient fuzzy logic controllers</Description>
+    <Description>A lightweight C# library for implementing efficient fuzzy logic controllers</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Copyright>Copyright (c) Imagibee 2025</Copyright>
