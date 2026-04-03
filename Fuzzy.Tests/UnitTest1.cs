@@ -129,29 +129,6 @@ public class Tests
     }
 
     [Test]
-    public void ExampleTest()
-    {
-        // Tip Results
-        MyTipCalculator tip = new()
-        {
-            LowTip = 7.5,
-            AverageTip = 15,
-            GenerousTip = 25
-        };
-        Assert.AreEqual(25, tip.Calculate(5, 3), ALLOWEDERROR);
-        Assert.AreEqual(20, tip.Calculate(4, 3), ALLOWEDERROR);
-        Assert.AreEqual(17.5, tip.Calculate(3.5, 3), ALLOWEDERROR);
-        Assert.AreEqual(15, tip.Calculate(3, 3), ALLOWEDERROR);
-        Assert.AreEqual(14.1666666, tip.Calculate(3.5, 2), ALLOWEDERROR);
-        Assert.AreEqual(12.5, tip.Calculate(3, 2), ALLOWEDERROR);
-        Assert.AreEqual(11.25, tip.Calculate(3, 1), ALLOWEDERROR);
-        Assert.AreEqual(10, tip.Calculate(2, 1), ALLOWEDERROR);
-        Assert.AreEqual(7.5, tip.Calculate(1, 1), ALLOWEDERROR);
-        tip.LowTip = 10;
-        Assert.AreEqual(10, tip.Calculate(1, 1), ALLOWEDERROR);
-    }
-
-    [Test]
     public void FuzzifyTest()
     {
         Fuzzy.Input ServiceWasExcellent = new(3, 5, double.MaxValue, double.MaxValue);
@@ -177,9 +154,199 @@ public class Tests
         Assert.AreEqual(0, ServiceWasPoor.FX);
     }
 
+    [Test]
+    public void ExampleTest1()
+    {
+        // Define membership functions for fuzzy inputs
+        //
+        // thetaIsNegative
+        //    (FX)
+        //     |
+        // 1.0 | -----------
+        //     |              \
+        //     |                 \
+        //     |                    \
+        //     |                       \
+        // 0.0 |                          ----------
+        // __________|______|______|______|______|_____ radians (X)
+        //     |   -1.0    -.5     0     .5     1.0
+        Fuzzy.Input thetaIsNegative = new(double.MinValue, double.MinValue, -.5, .5);
+
+        // thetaIsPositive
+        //    (FX)
+        //     |
+        // 1.0 |                          -----------
+        //     |                       /
+        //     |                    /
+        //     |                 /
+        //     |              /
+        // 0.0 | -----------
+        // __________|______|______|______|______|_____ radians (X)
+        //     |   -1.0    -.5     0     .5     1.0
+        Fuzzy.Input thetaIsPositive = new(-.5, .5, double.MaxValue, double.MaxValue);
+
+        // thetaDotIsNegative
+        //    (FX)
+        //     |
+        // 1.0 | -----------
+        //     |              \
+        //     |                 \
+        //     |                    \
+        //     |                       \
+        // 0.0 |                          ----------
+        // __________|______|______|______|______|_____ radians/s (X)
+        //     |    -10    -5      0      5      10
+        Fuzzy.Input thetaDotIsNegative = new(double.MinValue, double.MinValue, -5, 5);
+
+        // thetaDotIsPositive
+        //    (FX)
+        //     |
+        // 1.0 |                          -----------
+        //     |                       /
+        //     |                    /
+        //     |                 /
+        //     |              /
+        // 0.0 | -----------
+        // __________|______|______|______|______|_____ radians/s (X)
+        //     |    -10    -5      0      5      10
+        Fuzzy.Input thetaDotIsPositive = new(-5, 5, double.MaxValue, double.MaxValue);
+
+        // cartPositionIsNegative
+        //    (FX)
+        //     |
+        // 1.0 | -----------
+        //     |              \
+        //     |                 \
+        //     |                    \
+        //     |                       \
+        // 0.0 |                          ----------
+        // __________|______|______|______|______|_____ m (X)
+        //     |    -2     -1      0      1      2
+        Fuzzy.Input cartPositionIsNegative = new(double.MinValue, double.MinValue, -1, 1);
+
+        // cartPositionIsPositive
+        //    (FX)
+        //     |
+        // 1.0 |                          -----------
+        //     |                       /
+        //     |                    /
+        //     |                 /
+        //     |              /
+        // 0.0 | -----------
+        // __________|______|______|______|______|_____ m (X)
+        //     |    -2     -1      0      1      2
+        Fuzzy.Input cartPositionIsPositive = new(-1, 1, double.MaxValue, double.MaxValue);
+
+        // cartVelocityIsNegative
+        //    (FX)
+        //     |
+        // 1.0 | -----------
+        //     |              \
+        //     |                 \
+        //     |                    \
+        //     |                       \
+        // 0.0 |                          ----------
+        // __________|______|______|______|______|_____ m/s (X)
+        //     |    -10    -5      0      5      10
+        Fuzzy.Input cartVelocityIsNegative = new(double.MinValue, double.MinValue, -5, 5);
+
+        // cartVelocityIsPositive
+        //    (FX)
+        //     |
+        // 1.0 |                          -----------
+        //     |                       /
+        //     |                    /
+        //     |                 /
+        //     |              /
+        // 0.0 | -----------
+        // __________|______|______|______|______|_____ m/s (X)
+        //     |    -10    -5      0      5      10
+        Fuzzy.Input cartVelocityIsPositive = new(-5, 5, double.MaxValue, double.MaxValue);
+
+        // Define output values [Nm]
+        double forceIsNegativeSmall = -2;
+        double forceIsPositiveSmall = 2;
+        double forceIsNegativeMedium = -12;
+        double forceIsPositiveMedium = 12;
+        double forceIsNegativeLarge = -20;
+        double forceIsPositiveLarge = 20;
+
+        // Define rules
+        // IF (theta is negative) THEN  (force is negative medium)
+        // IF (theta is positive) THEN  (force is positive medium)
+        // IF (thetaDot is negative) THEN  (force is negative large)
+        // IF (thetaDot is positive) THEN  (force is positive large)
+        // IF (cartPosition is negative) THEN  (force is positive small)
+        // IF (cartPosition is positive) THEN  (force is negative small)
+        // IF (cartVelocity is negative) THEN  (force is negative medium)
+        // IF (cartVelocity is positive) THEN  (force is positive medium)
+        Fuzzy.Rule[] rules = new Fuzzy.Rule[]
+        {
+            new(() => forceIsNegativeMedium, () => thetaIsNegative.FX),
+            new(() => forceIsPositiveMedium, () => thetaIsPositive.FX),
+            new(() => forceIsNegativeLarge, () => thetaDotIsNegative.FX),
+            new(() => forceIsPositiveLarge, () => thetaDotIsPositive.FX),
+            new(() => forceIsPositiveSmall, () => cartPositionIsNegative.FX),
+            new(() => forceIsNegativeSmall, () => cartPositionIsPositive.FX),
+            new(() => forceIsNegativeMedium, () => cartVelocityIsNegative.FX),
+            new(() => forceIsPositiveMedium, () => cartVelocityIsPositive.FX),
+        };
+
+        // Physical input values
+        double theta = 0;
+        double thetaDot = 0;
+        double cartPosition = 0;
+        double cartVelocity = 0;
+
+        // Physical output value
+        double force = 0;
+
+        // The guts of the control loop are shown below.  The control loop would
+        // normally be called periodically in some kind of Update() function.
+        //
+        // 1) Refresh values for the inputs (theta, thetaDot, cartPosition, and cartVelocity)
+        // (Not shown)
+
+        // 2) Fuzzify the inputs
+        thetaIsNegative.Fuzzify(theta);
+        thetaIsPositive.Fuzzify(theta);
+        thetaDotIsNegative.Fuzzify(thetaDot);
+        thetaDotIsPositive.Fuzzify(thetaDot);
+        cartPositionIsNegative.Fuzzify(cartPosition);
+        cartPositionIsPositive.Fuzzify(cartPosition);
+        cartVelocityIsNegative.Fuzzify(cartVelocity);
+        cartVelocityIsPositive.Fuzzify(cartVelocity);
+
+        // 3) Update the force with the newly computed output value
+        force = Fuzzy.Defuzzify(rules);
+    }
+
+    [Test]
+    public void ExampleTest2()
+    {
+        // Tip Results
+        MyTipCalculator tip = new()
+        {
+            LowTip = 7.5,
+            AverageTip = 15,
+            GenerousTip = 25
+        };
+        Assert.AreEqual(25, tip.Calculate(5, 3), ALLOWEDERROR);
+        Assert.AreEqual(20, tip.Calculate(4, 3), ALLOWEDERROR);
+        Assert.AreEqual(17.5, tip.Calculate(3.5, 3), ALLOWEDERROR);
+        Assert.AreEqual(15, tip.Calculate(3, 3), ALLOWEDERROR);
+        Assert.AreEqual(14.1666666, tip.Calculate(3.5, 2), ALLOWEDERROR);
+        Assert.AreEqual(12.5, tip.Calculate(3, 2), ALLOWEDERROR);
+        Assert.AreEqual(11.25, tip.Calculate(3, 1), ALLOWEDERROR);
+        Assert.AreEqual(10, tip.Calculate(2, 1), ALLOWEDERROR);
+        Assert.AreEqual(7.5, tip.Calculate(1, 1), ALLOWEDERROR);
+        tip.LowTip = 10;
+        Assert.AreEqual(10, tip.Calculate(1, 1), ALLOWEDERROR);
+    }
+
     public class MyTipCalculator
     {
-        // Calculator properties
+        // Properties for the tip levels
         public double LowTip;
         public double AverageTip;
         public double GenerousTip;
