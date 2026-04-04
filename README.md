@@ -3,7 +3,7 @@
 
 The primary goal of this library is to to provide simple and efficient code that supports creating fuzzy logic controllers.  It's features center around the implementation of these controllers not around design, visualization, or academics.  It prioritizes ease-of-integration, ease-of-use, and efficiency. The original use case was controlling NPC's for Unity games.
 
-If you already have (or can create) a set of fuzzy rules, and simply want to implement these rules in your C# code with minimal fuss, then this might be the library for you.  On the other hand, if you are looking for a tool to help you design or visualize a fuzzy controller then you will want to look elsewhere (these aren't the droids you are looking for).
+If you already have (or can create) a set of fuzzy rules, and simply want to implement these rules in your C# code with minimal fuss, then this might be the library for you.  On the other hand, if you are looking for a tool to help you design or visualize a fuzzy controller then you will want to look elsewhere.
 
 ## API
 Here is the main API.  Refer to the [source code](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy/Fuzzy.cs) for details.  There are also examples later in this document, and feel free to look at the [unit tests](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy.Tests/UnitTest1.cs).
@@ -29,107 +29,108 @@ Here is an example that implements the cannonical fuzzy-logic tip calculator for
 - IF (the service was ok) THEN (the tip should be average)
 - IF ((the service was poor) OR (the food was terrible)) THEN (the tip should be low)
 
-### And here is the code ...
+### Here is the code ...
 ```csharp
 using Imagibee;
 
 public class MyTipCalculator
 {
-// Properties for the tip levels
-public double LowTip;
-public double AverageTip;
-public double GenerousTip;
+    // Properties for the tip levels
+    public double LowTip;
+    public double AverageTip;
+    public double GenerousTip;
 
-// Storage for the inputs and rules
-readonly Fuzzy.Input serviceWasExcellent;
-readonly Fuzzy.Input serviceWasOk;
-readonly Fuzzy.Input serviceWasPoor;
-readonly Fuzzy.Input foodWasTerrible;
-readonly Fuzzy.Rule[] rules;
+    // Storage for the inputs and rules
+    readonly Fuzzy.Input serviceWasExcellent;
+    readonly Fuzzy.Input serviceWasOk;
+    readonly Fuzzy.Input serviceWasPoor;
+    readonly Fuzzy.Input foodWasTerrible;
+    readonly Fuzzy.Rule[] rules;
 
-// Construct a MyTipCalculator
-public MyTipCalculator()
-{
-    // Define membership function for 1-5 star service rating (5 stars = best)
-    //
-    // serviceWasExcellent
-    //    (FX)
-    //     |
-    // 1.0 |                     ----
-    //     |                   /
-    //     |                 /
-    //     |               /
-    //     |             /
-    // 0.0 | -----------
-    // ___________________________________ service stars (X)
-    //     |    1   2   3   4   5
-    serviceWasExcellent = new Fuzzy.Input(3, 5, double.MaxValue, double.MaxValue);
-
-    // serviceWasOk
-    //    (FX)
-    //     |
-    // 1.0 |            -
-    //     |           /  \
-    //     |         /      \
-    //     |       /          \
-    //     |     /              \
-    // 0.0 | ---                 ----
-    // ___________________________________ service stars (X)
-    //     |    1   2   3   4   5
-    serviceWasOk = new Fuzzy.Input(1, 3, 3, 5);
-
-    // serviceWasPoor
-    //    (FX)
-    //     |
-    // 1.0 | ---
-    //     |     \
-    //     |       \
-    //     |         \
-    //     |           \
-    // 0.0 |             -----------
-    // ___________________________________ service stars (X)
-    //     |    1   2   3   4   5
-    serviceWasPoor = new Fuzzy.Input(double.MinValue, double.MinValue, 1, 3);
-
-    // Define membership function for 1-5 star food rating (5 stars = best)
-    //
-    // foodWasTerrible
-    //    (FX)
-    //     |
-    // 1.0 | ---
-    //     |     \
-    //     |       \
-    //     |         \
-    //     |           \
-    // 0.0 |             -----------
-    // ___________________________________ food stars (X)
-    //     |    1   2   3   4   5
-    foodWasTerrible = new Fuzzy.Input(double.MinValue, double.MinValue, 1, 3);
-
-    // Define the fuzzy rules
-    rules = new Fuzzy.Rule[]
+    // Construct a MyTipCalculator
+    public MyTipCalculator()
     {
-        new(() => serviceWasExcellent, () => GenerousTip),
-        new(() => serviceWasOk, () => AverageTip),
-        new(() => Fuzzy.OR(serviceWasPoor, foodWasTerrible), () => LowTip)
-    };
-}
+        // Define membership function for 1-5 star service rating (5 stars = best)
+        //
+        // serviceWasExcellent
+        //    (FX)
+        //     |
+        // 1.0 |                     ----
+        //     |                   /
+        //     |                 /
+        //     |               /
+        //     |             /
+        // 0.0 | -----------
+        // ___________________________________ service stars (X)
+        //     |    1   2   3   4   5
+        serviceWasExcellent = new Fuzzy.Input(3, 5, double.MaxValue, double.MaxValue);
 
-// Calculate a new tip value based on service rating and food rating
-public double Calculate(double serviceStars, double foodStars)
-{
-    // Fuzzify 1-5 star service rating
-    Fuzzy.Fuzzify(serviceStars, serviceWasPoor, serviceWasOk, serviceWasExcellent);
+        // serviceWasOk
+        //    (FX)
+        //     |
+        // 1.0 |            -
+        //     |           /  \
+        //     |         /      \
+        //     |       /          \
+        //     |     /              \
+        // 0.0 | ---                 ----
+        // ___________________________________ service stars (X)
+        //     |    1   2   3   4   5
+        serviceWasOk = new Fuzzy.Input(1, 3, 3, 5);
 
-    // Fuzzify 1-5 star food rating
-    foodWasTerrible.Fuzzify(foodStars);
+        // serviceWasPoor
+        //    (FX)
+        //     |
+        // 1.0 | ---
+        //     |     \
+        //     |       \
+        //     |         \
+        //     |           \
+        // 0.0 |             -----------
+        // ___________________________________ service stars (X)
+        //     |    1   2   3   4   5
+        serviceWasPoor = new Fuzzy.Input(double.MinValue, double.MinValue, 1, 3);
 
-    // Defuzzify rules and return the physical tip value
-    return Fuzzy.Defuzzify(rules);
+        // Define membership function for 1-5 star food rating (5 stars = best)
+        //
+        // foodWasTerrible
+        //    (FX)
+        //     |
+        // 1.0 | ---
+        //     |     \
+        //     |       \
+        //     |         \
+        //     |           \
+        // 0.0 |             -----------
+        // ___________________________________ food stars (X)
+        //     |    1   2   3   4   5
+        foodWasTerrible = new Fuzzy.Input(double.MinValue, double.MinValue, 1, 3);
+
+        // Define the fuzzy rules
+        rules = new Fuzzy.Rule[]
+        {
+            new(() => serviceWasExcellent, () => GenerousTip),
+            new(() => serviceWasOk, () => AverageTip),
+            new(() => Fuzzy.OR(serviceWasPoor, foodWasTerrible), () => LowTip)
+        };
+    }
+
+    // Calculate a new tip value based on service rating and food rating
+    public double Calculate(double serviceStars, double foodStars)
+    {
+        // Fuzzify 1-5 star service rating
+        Fuzzy.Fuzzify(serviceStars, serviceWasPoor, serviceWasOk, serviceWasExcellent);
+
+        // Fuzzify 1-5 star food rating
+        foodWasTerrible.Fuzzify(foodStars);
+
+        // Defuzzify rules and return the physical tip value
+        return Fuzzy.Defuzzify(rules);
+    }
 }
 ```
 
-### And here are the tests ...
+### Here are the tests ...
 ```csharp
 MyTipCalculator tip = new()
 {
@@ -163,7 +164,7 @@ Here is an example that implements the cannonical pole on a cart control problem
 - IF (cartVelocity is negative) THEN (force is negative medium)
 - IF (cartVelocity is positive) THEN (force is positive medium)
 
-### And here is the code...
+### Here is the code...
 ```csharp
 // Define membership functions for fuzzy inputs
 //
