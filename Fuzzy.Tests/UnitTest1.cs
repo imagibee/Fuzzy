@@ -102,8 +102,8 @@ public class Tests
         i2.Fuzzify(1.5);
         var rules = new Fuzzy.Rule[]
         {
-            new(i1, () => 10),
-            new(i2, () => 30),
+            new(() => i1, () => 10),
+            new(() => i2, () => 30),
         };
         Assert.AreEqual(20, Fuzzy.Defuzzify(rules));
     }
@@ -115,9 +115,34 @@ public class Tests
         i1.Fuzzify(-2);
         var rules = new Fuzzy.Rule[]
         {
-            new(i1, () => 0),
+            new(() => i1, () => 0),
+            new(() => i1, () => 0),
         };
         Assert.AreEqual(0, Fuzzy.Defuzzify(rules));
+    }
+
+    [Test]
+    public void TestAndOrNotClosure()
+    {
+        Fuzzy.Input i1 = new(-2, -1, 1, 2);
+        Fuzzy.Input i2 = new(-2, -1, 1, 2);
+        Fuzzy.Input i3 = new(-2, -1, 1, 2);
+        var rules = new Fuzzy.Rule[]
+        {
+            new(() => Fuzzy.NOT(Fuzzy.OR(Fuzzy.AND(i1, i2), i3)), () => 100),
+        };
+        i1.Fuzzify(2);
+        Assert.AreEqual(0, i1.FX, ALLOWEDERROR);
+        i2.Fuzzify(0);
+        Assert.AreEqual(1, i2.FX, ALLOWEDERROR);
+        i3.Fuzzify(1.75);
+        Assert.AreEqual(.25, i3.FX, ALLOWEDERROR);
+        Assert.AreEqual(75, Fuzzy.Defuzzify(rules), ALLOWEDERROR);
+        i1.Fuzzify(1.2);
+        Assert.AreEqual(.8, i1.FX, ALLOWEDERROR);
+        i2.Fuzzify(-1.2);
+        Assert.AreEqual(.8, i2.FX, ALLOWEDERROR);
+        Assert.AreEqual(20, Fuzzy.Defuzzify(rules), ALLOWEDERROR);
     }
 
     [Test]
@@ -270,9 +295,9 @@ public class Tests
             // Define the fuzzy rules
             rules = new Fuzzy.Rule[]
             {
-                new(serviceWasExcellent, () => GenerousTip),
-                new(serviceWasOk, () => AverageTip),
-                new(Fuzzy.OR(serviceWasPoor, foodWasTerrible), () => LowTip)
+                new(() => serviceWasExcellent, () => GenerousTip),
+                new(() => serviceWasOk, () => AverageTip),
+                new(() => Fuzzy.OR(serviceWasPoor, foodWasTerrible), () => LowTip)
             };
         }
 
@@ -418,30 +443,22 @@ public class Tests
         double forceIsPositiveLarge = 20;
 
         // Define rules
-        // IF (theta is negative) THEN  (force is negative medium)
-        // IF (theta is positive) THEN  (force is positive medium)
-        // IF (thetaDot is negative) THEN  (force is negative large)
-        // IF (thetaDot is positive) THEN  (force is positive large)
-        // IF (cartPosition is negative) THEN  (force is positive small)
-        // IF (cartPosition is positive) THEN  (force is negative small)
-        // IF (cartVelocity is negative) THEN  (force is negative medium)
-        // IF (cartVelocity is positive) THEN  (force is positive medium)
         Fuzzy.Rule[] rules = new Fuzzy.Rule[]
         {
-            new(thetaIsNegative, () => forceIsNegativeMedium),
-            new(thetaIsPositive, () => forceIsPositiveMedium),
-            new(thetaDotIsNegative, () => forceIsNegativeLarge),
-            new(thetaDotIsPositive, () => forceIsPositiveLarge),
-            new(cartPositionIsNegative, () => forceIsPositiveSmall),
-            new(cartPositionIsPositive, () => forceIsNegativeSmall),
-            new(cartVelocityIsNegative, () => forceIsNegativeMedium),
-            new(cartVelocityIsPositive, () => forceIsPositiveMedium),
+            new(() => thetaIsNegative, () => forceIsNegativeMedium),
+            new(() => thetaIsPositive, () => forceIsPositiveMedium),
+            new(() => thetaDotIsNegative, () => forceIsNegativeLarge),
+            new(() => thetaDotIsPositive, () => forceIsPositiveLarge),
+            new(() => cartPositionIsNegative, () => forceIsPositiveSmall),
+            new(() => cartPositionIsPositive, () => forceIsNegativeSmall),
+            new(() => cartVelocityIsNegative, () => forceIsNegativeMedium),
+            new(() => cartVelocityIsPositive, () => forceIsPositiveMedium),
         };
 
         // The 3 stages of a control loop are illustrated below.  The control loop
         // is called periodically in some kind of Update() function.
         //
-        // 1) Refresh the inputs (not shown)
+        // 1) Refresh the inputs (details not shown)
         double theta = 0;
         double thetaDot = 0;
         double cartPosition = 0;

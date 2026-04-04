@@ -110,16 +110,17 @@ namespace Imagibee
         // re-calculate the output using the current value of the inputs.
         public class Rule
         {
-            public Input I { get; private set; }
+            public Func<Input> I { get; private set; }
             public Func<double> Y { get; private set; }
 
-            // i - the fuzzy input that belongs to the rule.
+            // i - an anonymous function that returns the fuzzy input that belongs to
+            // the rule.
             //
             // y - an anonymous function that defines a physical output value.  In many
             // scenarios y will be a constant value (zero-order).  In other scenarios it
             // may be variable; for example, a threshold value changes depending on the
             // state of the system.
-            public Rule(Input i, Func<double> y)
+            public Rule(Func<Input> i, Func<double> y)
             {
                 I = i;
                 Y = y;
@@ -187,11 +188,10 @@ namespace Imagibee
         // NOT of a fuzzified value
         public static Input NOT(Input i)
         {
-            Input result = new(i.X1, i.X2, i.X3, i.X4)
+            return new(i.X1, i.X2, i.X3, i.X4)
             {
                 FX = 1 - i.FX
             };
-            return result;
         }
 
         // Defuzzify defuzzifies rules back to a physical value
@@ -201,22 +201,30 @@ namespace Imagibee
         public static double Defuzzify(Rule[] rules)
 #endif
         {
-            double nx = 0;
-            double dx = 0;
-            foreach (var rule in rules)
+            if (rules.Length == 1)
             {
-                var fx = rule.I.FX;
-                nx += fx * rule.Y();
-                dx += fx;
-            }
-            if (dx == 0 && nx == 0)
-            {
-                // Define numertor == denominator == 0 as zero
-                return 0;
+                var rule = rules[0];
+                return rule.I().FX * rule.Y();
             }
             else
             {
-                return nx / dx;
+                double nx = 0;
+                double dx = 0;
+                foreach (var rule in rules)
+                {
+                    var fx = rule.I().FX;
+                    nx += fx * rule.Y();
+                    dx += fx;
+                }
+                if (dx == 0 && nx == 0)
+                {
+                    // Define numertor == denominator == 0 as zero
+                    return 0;
+                }
+                else
+                {
+                    return nx / dx;
+                }
             }
         }
 
