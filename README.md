@@ -3,10 +3,10 @@
 
 The primary goal of this library is to to provide simple and efficient code that supports creating fuzzy logic controllers.  It's features center around the implementation of these controllers not around design, visualization, or academics.  It prioritizes ease-of-integration, ease-of-use, and efficiency. The original use case was controlling NPC's for Unity games.
 
-If you already have (or can create) a set of fuzzy rules, and simply want to implement these rules in your C# code with minimal fuss, then this might be the library for you.  On the other hand, if you are looking for a tool to help you design or visualize a fuzzy controller then you will want to look elsewhere.
+If you already have (or can create) a set of fuzzy rules, and simply want to implement these rules in your C# code with minimal fuss, then this might be the library for you.  On the other hand, if you are looking for a tool to help you design or visualize a fuzzy controller then you will want to look elsewhere (these aren't the droids you are looking for).
 
 ## API
-Here is the main API.  Refer to the [source code](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy/Fuzzy.cs) for details.  There are also examples later in this document, and feel free to look at the [unit tests](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy.Tests/UnitTest1.cs) if that is helpful.
+Here is the main API.  Refer to the [source code](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy/Fuzzy.cs) for details.  There are also examples later in this document, and feel free to look at the [unit tests](https://github.com/imagibee/Fuzzy/blob/main/Fuzzy.Tests/UnitTest1.cs).
 
 - `Imagibee.Fuzzy.Input` - define trapezoidal, triangular, or box membership functions
 - `Imagibee.Fuzzy.Rule` - define IF/THEN rules based on fuzzy inputs
@@ -14,12 +14,12 @@ Here is the main API.  Refer to the [source code](https://github.com/imagibee/Fu
 - `Imagibee.Fuzzy.Defuzzify` - defuzzify rules to a physical output value
 
 ## Usage concepts
-In many cases the usage can be divided into two stages.  A definition stage that occurs once when the system starts up, and a control loop that runs periodically.  During the definition stage the `Input` and `Rule` are instantiated and initialized into persistent storage.  This stage usually occurs once during some type of startup routine.
+In many cases the usage can be divided into two stages.  A definition stage that occurs once when the system starts up, and a control loop that runs periodically.  During the definition stage the `Input` and `Rule` are instantiated and initialized into persistent storage.
 
-Once definition is completed, the control loop begins.  It is the responsibility of the control loop to dynamically update the system.  In order to do this, it periodically refreshes the inputs, calls `Fuzzify` passing in a refreshed value, and finally calls `Defuzzify` to update the output to a new physical value.  The control loop usually occurs during an update routine based on a timer interval that continues until the application quits.
+Once definition is completed, the control loop begins.  It is the responsibility of the control loop to dynamically update the system.  In order to do this, it periodically refreshes the inputs, calls `Fuzzify` passing in a refreshed input value, and finally calls `Defuzzify` to update the output to a new physical value.  The control loop usually occurs during an update routine based on a timer interval that continues until the application terminates.
 
 ## A note about `Rule` evaluation
-You may have noticed that `Rule` relies on lambda expressions (as opposed to constants).  And if so you may be wondering why that is.  The idea is to have a simple way to define rules once but evaluate them over and over in the control loop.  The way the C# language defines closures for lambda functions provides a flexible and convenient way to do this since lambdas capture references, not their values at the time the lambda is created.  So the values captured in the rules are evaluated each time `Defuzzify` is called, not merely when they are constructed.
+You may have noticed that `Rule` relies on lambda expressions (as opposed to constants).  And if so you may be wondering why that is.  The idea is to have a simple way to define rules once but evaluate them over and over in the control loop.  The way the C# language defines closures for lambda functions provides a flexible and convenient way to do this since lambdas capture references, not their values at the time the lambda is created.  The main takeaway here is that rules are evaluated each time `Defuzzify` is called, not merely when they are instantiated.
 
 ## Example 1 - fuzzy tip calculator
 Here is an example that implements the cannonical fuzzy-logic tip calculator for computing the waiter's tip at a restaraunt.  The tip is calculated based on a combination of the service and food rating (each between 1-5 stars).
@@ -35,98 +35,97 @@ using Imagibee;
 
 public class MyTipCalculator
 {
-    // Properties for the tip levels
-    public double LowTip;
-    public double AverageTip;
-    public double GenerousTip;
+// Properties for the tip levels
+public double LowTip;
+public double AverageTip;
+public double GenerousTip;
 
-    // Storage for the inputs and rules
-    readonly Fuzzy.Input serviceWasExcellent;
-    readonly Fuzzy.Input serviceWasOk;
-    readonly Fuzzy.Input serviceWasPoor;
-    readonly Fuzzy.Input foodWasTerrible;
-    readonly Fuzzy.Rule[] rules;
+// Storage for the inputs and rules
+readonly Fuzzy.Input serviceWasExcellent;
+readonly Fuzzy.Input serviceWasOk;
+readonly Fuzzy.Input serviceWasPoor;
+readonly Fuzzy.Input foodWasTerrible;
+readonly Fuzzy.Rule[] rules;
 
-    // Construct a MyTipCalculator
-    public MyTipCalculator()
+// Construct a MyTipCalculator
+public MyTipCalculator()
+{
+    // Define membership function for 1-5 star service rating (5 stars = best)
+    //
+    // serviceWasExcellent
+    //    (FX)
+    //     |
+    // 1.0 |                     ----
+    //     |                   /
+    //     |                 /
+    //     |               /
+    //     |             /
+    // 0.0 | -----------
+    // ___________________________________ service stars (X)
+    //     |    1   2   3   4   5
+    serviceWasExcellent = new Fuzzy.Input(3, 5, double.MaxValue, double.MaxValue);
+
+    // serviceWasOk
+    //    (FX)
+    //     |
+    // 1.0 |            -
+    //     |           /  \
+    //     |         /      \
+    //     |       /          \
+    //     |     /              \
+    // 0.0 | ---                 ----
+    // ___________________________________ service stars (X)
+    //     |    1   2   3   4   5
+    serviceWasOk = new Fuzzy.Input(1, 3, 3, 5);
+
+    // serviceWasPoor
+    //    (FX)
+    //     |
+    // 1.0 | ---
+    //     |     \
+    //     |       \
+    //     |         \
+    //     |           \
+    // 0.0 |             -----------
+    // ___________________________________ service stars (X)
+    //     |    1   2   3   4   5
+    serviceWasPoor = new Fuzzy.Input(double.MinValue, double.MinValue, 1, 3);
+
+    // Define membership function for 1-5 star food rating (5 stars = best)
+    //
+    // foodWasTerrible
+    //    (FX)
+    //     |
+    // 1.0 | ---
+    //     |     \
+    //     |       \
+    //     |         \
+    //     |           \
+    // 0.0 |             -----------
+    // ___________________________________ food stars (X)
+    //     |    1   2   3   4   5
+    foodWasTerrible = new Fuzzy.Input(double.MinValue, double.MinValue, 1, 3);
+
+    // Define the fuzzy rules
+    rules = new Fuzzy.Rule[]
     {
-        // Define membership function for 1-5 star service rating (5 stars = best)
-        //
-        // serviceWasExcellent
-        //    (FX)
-        //     |
-        // 1.0 |                     ----
-        //     |                   /
-        //     |                 /
-        //     |               /
-        //     |             /
-        // 0.0 | -----------
-        // ___________________________________ service stars (X)
-        //     |    1   2   3   4   5
-        serviceWasExcellent = new Fuzzy.Input(3, 5, double.MaxValue, double.MaxValue);
+        new(() => serviceWasExcellent, () => GenerousTip),
+        new(() => serviceWasOk, () => AverageTip),
+        new(() => Fuzzy.OR(serviceWasPoor, foodWasTerrible), () => LowTip)
+    };
+}
 
-        // serviceWasOk
-        //    (FX)
-        //     |
-        // 1.0 |            -
-        //     |           /  \
-        //     |         /      \
-        //     |       /          \
-        //     |     /              \
-        // 0.0 | ---                 ----
-        // ___________________________________ service stars (X)
-        //     |    1   2   3   4   5
-        serviceWasOk = new Fuzzy.Input(1, 3, 3, 5);
+// Calculate a new tip value based on service rating and food rating
+public double Calculate(double serviceStars, double foodStars)
+{
+    // Fuzzify 1-5 star service rating
+    Fuzzy.Fuzzify(serviceStars, serviceWasPoor, serviceWasOk, serviceWasExcellent);
 
-        // serviceWasPoor
-        //    (FX)
-        //     |
-        // 1.0 | ---
-        //     |     \
-        //     |       \
-        //     |         \
-        //     |           \
-        // 0.0 |             -----------
-        // ___________________________________ service stars (X)
-        //     |    1   2   3   4   5
-        serviceWasPoor = new Fuzzy.Input(double.MinValue, double.MinValue, 1, 3);
+    // Fuzzify 1-5 star food rating
+    foodWasTerrible.Fuzzify(foodStars);
 
-        // Define membership function for 1-5 star food rating (5 stars = best)
-        //
-        // foodWasTerrible
-        //    (FX)
-        //     |
-        // 1.0 | ---
-        //     |     \
-        //     |       \
-        //     |         \
-        //     |           \
-        // 0.0 |             -----------
-        // ___________________________________ food stars (X)
-        //     |    1   2   3   4   5
-        foodWasTerrible = new Fuzzy.Input(double.MinValue, double.MinValue, 1, 3);
-
-        // Define the fuzzy rules
-        rules = new Fuzzy.Rule[]
-        {
-            new(serviceWasExcellent, () => GenerousTip),
-            new(serviceWasOk, () => AverageTip),
-            new(Fuzzy.OR(serviceWasPoor, foodWasTerrible), () => LowTip)
-        };
-    }
-
-    // Calculate a new tip value based on service rating and food rating
-    public double Calculate(double serviceStars, double foodStars)
-    {
-        // Fuzzify 1-5 star service rating
-        Fuzzy.Fuzzify(serviceStars, serviceWasPoor, serviceWasOk, serviceWasExcellent);
-
-        // Fuzzify 1-5 star food rating
-        foodWasTerrible.Fuzzify(foodStars);
-
-        // Defuzzify rules and return the physical tip value
-        return Fuzzy.Defuzzify(rules);
-    }
+    // Defuzzify rules and return the physical tip value
+    return Fuzzy.Defuzzify(rules);
 }
 ```
 
@@ -152,8 +151,19 @@ Assert.AreEqual(10, tip.Calculate(1, 1), ALLOWEDERROR);
 ```
 
 ## Example 2 - pole on a cart
-Here is an example that implements the cannonical pole on a cart control problem.  You can refer to [this youtube video](https://youtu.be/fU8Lyc8kzto) for an in-depth explanation.  (This example was compiled, but the functionality was not tested.)
+Here is an example that implements the cannonical pole on a cart control problem.  You can refer to [this youtube video](https://youtu.be/fU8Lyc8kzto) for an in-depth explanation.  (This example compiles, but the functionality was never thoroughly tested.)
 
+### Here are the rules...
+- IF (theta is negative) THEN (force is negative medium)
+- IF (theta is positive) THEN (force is positive medium)
+- IF (thetaDot is negative) THEN (force is negative large)
+- IF (thetaDot is positive) THEN (force is positive large)
+- IF (cartPosition is negative) THEN (force is positive small)
+- IF (cartPosition is positive) THEN (force is negative small)
+- IF (cartVelocity is negative) THEN (force is negative medium)
+- IF (cartVelocity is positive) THEN (force is positive medium)
+
+### And here is the code...
 ```csharp
 // Define membership functions for fuzzy inputs
 //
@@ -270,30 +280,22 @@ double forceIsNegativeLarge = -20;
 double forceIsPositiveLarge = 20;
 
 // Define rules
-// IF (theta is negative) THEN  (force is negative medium)
-// IF (theta is positive) THEN  (force is positive medium)
-// IF (thetaDot is negative) THEN  (force is negative large)
-// IF (thetaDot is positive) THEN  (force is positive large)
-// IF (cartPosition is negative) THEN  (force is positive small)
-// IF (cartPosition is positive) THEN  (force is negative small)
-// IF (cartVelocity is negative) THEN  (force is negative medium)
-// IF (cartVelocity is positive) THEN  (force is positive medium)
 Fuzzy.Rule[] rules = new Fuzzy.Rule[]
 {
-    new(thetaIsNegative, () => forceIsNegativeMedium),
-    new(thetaIsPositive, () => forceIsPositiveMedium),
-    new(thetaDotIsNegative, () => forceIsNegativeLarge),
-    new(thetaDotIsPositive, () => forceIsPositiveLarge),
-    new(cartPositionIsNegative, () => forceIsPositiveSmall),
-    new(cartPositionIsPositive, () => forceIsNegativeSmall),
-    new(cartVelocityIsNegative, () => forceIsNegativeMedium),
-    new(cartVelocityIsPositive, () => forceIsPositiveMedium),
+    new(() => thetaIsNegative, () => forceIsNegativeMedium),
+    new(() => thetaIsPositive, () => forceIsPositiveMedium),
+    new(() => thetaDotIsNegative, () => forceIsNegativeLarge),
+    new(() => thetaDotIsPositive, () => forceIsPositiveLarge),
+    new(() => cartPositionIsNegative, () => forceIsPositiveSmall),
+    new(() => cartPositionIsPositive, () => forceIsNegativeSmall),
+    new(() => cartVelocityIsNegative, () => forceIsNegativeMedium),
+    new(() => cartVelocityIsPositive, () => forceIsPositiveMedium),
 };
 
 // The 3 stages of a control loop are illustrated below.  The control loop
 // is called periodically in some kind of Update() function.
 //
-// 1) Refresh the inputs (not shown)
+// 1) Refresh the inputs (details not shown)
 double theta = 0;
 double thetaDot = 0;
 double cartPosition = 0;
@@ -310,7 +312,7 @@ double force = Fuzzy.Defuzzify(rules);
 ```
 
 ## Testing
-Run `Scripts/test`.
+Run `Scripts/test` and `Scripts/coverage`. 
 
 ## License
 [MIT](https://raw.githubusercontent.com/imagibee/Fuzzy/refs/heads/main/LICENSE)
